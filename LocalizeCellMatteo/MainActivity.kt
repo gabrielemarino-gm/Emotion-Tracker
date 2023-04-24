@@ -22,7 +22,8 @@ class MainActivity : AppCompatActivity() {
     private val MY_PERMISSIONS_REQUEST_LOCATION = 123
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) 
+    {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -35,7 +36,8 @@ class MainActivity : AppCompatActivity() {
 
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) 
+        {
             println("GPS provider is not enabled")
         }
 
@@ -45,8 +47,8 @@ class MainActivity : AppCompatActivity() {
             ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+            ) != PackageManager.PERMISSION_GRANTED) 
+        {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -60,8 +62,10 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val locationListener = object : LocationListener {
-            override fun onLocationChanged(location: Location) {
+        val locationListener = object : LocationListener 
+        {
+            override fun onLocationChanged(location: Location) 
+            {
                 val latitude = location.latitude
                 val longitude = location.longitude
 
@@ -112,15 +116,7 @@ class MainActivity : AppCompatActivity() {
 
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, locationListener)
 
-
-
-
-
-        //locationManager.removeUpdates(locationListener)
-
-
-
+        // locationManager.removeUpdates(locationListener)
     }
-
 }
 

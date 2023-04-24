@@ -8,6 +8,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.getSystemService
 import org.osmdroid.config.Configuration
@@ -16,7 +17,8 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
 import java.util.*
 
-class MapActivity {
+class MapActivity: AppCompatActivity()
+{
     private val MY_PERMISSIONS_REQUEST_LOCATION = 123
 
     override fun onCreate(savedInstanceState: Bundle?)
@@ -109,14 +111,8 @@ class MapActivity {
         }
 
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, locationListener)
-
-
-
-
-
+        
         //locationManager.removeUpdates(locationListener)
-
-
 
     }
 }
