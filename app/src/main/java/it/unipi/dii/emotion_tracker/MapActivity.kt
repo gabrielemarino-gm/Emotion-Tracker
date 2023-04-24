@@ -111,8 +111,14 @@ class MapActivity: AppCompatActivity()
         }
 
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, locationListener)
-        
+
+
+
+
+
         //locationManager.removeUpdates(locationListener)
+
+
 
     }
 }
