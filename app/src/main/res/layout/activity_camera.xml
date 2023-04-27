@@ -12,6 +12,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <it.unipi.dii.emotion_tracker.OverlayView
+        android:id="@+id/overlay"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent" />
+
     <Button
         android:id="@+id/image_capture_button"
         android:layout_width="110dp"
@@ -19,7 +24,7 @@
         android:layout_marginBottom="50dp"
         android:layout_marginEnd="50dp"
         android:elevation="2dp"
-        android:text="ciao"
+        android:text="take photo"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintEnd_toStartOf="@id/vertical_centerline" />
