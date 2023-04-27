@@ -100,6 +100,7 @@ class ObjectDetectorAnalyzer(
         // Preprocess the image and convert it into a TensorImage for detection.
         val tensorImage = imageProcessor.process(TensorImage.fromBitmap(image))
 
+        //ciao Matteo
         val results = objectDetector?.detect(tensorImage)
         inferenceTime = SystemClock.uptimeMillis() - inferenceTime
         objectDetectorListener.onResults(
