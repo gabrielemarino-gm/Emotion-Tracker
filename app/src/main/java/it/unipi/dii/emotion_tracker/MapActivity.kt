@@ -10,11 +10,11 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import java.util.*
 
@@ -122,6 +122,40 @@ class MapActivity: AppCompatActivity()
             Looper.getMainLooper()
         )
 
+        print_markers(myRef,map)
+    }
+
+    private fun print_markers(myRef: DatabaseReference, map: MapView) {
+
+        //TODO it does not work for the moment
+        myRef.addListenerForSingleValueEvent(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // Loop through the results and do something with each one
+                snapshot.children.forEach { child ->
+                    val childData = child.value as HashMap<String, Int>
+                    //println(childData!!::class.simpleName)
+                    println(childData)
+                    //var childD=HashMap<String, Int>()
+                    //childD= childData as HashMap<String, Int>
+                    println(childData.get("latitude"))
+                    //val jsonData= Json.decodeFromString<LocationCell>(childData.toString())
+                    val marker = Marker(map)
+                    marker.position = GeoPoint(childData.get("latitude")!!,
+                        childData.get("longitude")!!
+                    )
+                    marker.title = "lat:${childData.get("latitude")}\n" +
+                            "long:${childData.get("longitude")}\n" +
+                            "street:${childData.get("street")}\n" +
+                            "city:${childData.get("city")}"
+                    map.overlays.add(marker)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Handle error case
+                println("error in retrieving position")
+            }
+        })
     }
 }
 
