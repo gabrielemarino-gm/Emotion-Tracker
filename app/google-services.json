@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "556551491360",
+    "project_id": "emotion-tracker-48387",
+    "storage_bucket": "emotion-tracker-48387.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:556551491360:android:4dbdbe87040b5b7fb61145",
+        "android_client_info": {
+          "package_name": "it.unipi.dii.emotion_tracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "556551491360-dgasvbt82gtcisvd0h5k38fp2f6j7caq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3RzlkM78wTHiCRDi377U1NbyGMQWhXcQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "556551491360-dgasvbt82gtcisvd0h5k38fp2f6j7caq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
