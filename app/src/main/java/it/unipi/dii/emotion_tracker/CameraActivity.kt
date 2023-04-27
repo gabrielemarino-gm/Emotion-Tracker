@@ -16,8 +16,11 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.FaceDetection
 import it.unipi.dii.emotion_tracker.databinding.ActivityCameraBinding
 import org.tensorflow.lite.task.gms.vision.detector.Detection
+import java.util.LinkedList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -27,6 +30,7 @@ class CameraActivity : AppCompatActivity(), ObjectDetectorAnalyzer.DetectorListe
     // TODO replace with custom model
     private lateinit var objectDetector: ObjectDetectorAnalyzer
     private lateinit var bitmapBuffer: Bitmap
+    private val detector = FaceDetection.getClient()
 
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
@@ -79,7 +83,12 @@ class CameraActivity : AppCompatActivity(), ObjectDetectorAnalyzer.DetectorListe
                             )
                         }
 
-                        detectObjects(image)
+                        // Copy out RGB bits to the shared bitmap buffer
+                        image.use { bitmapBuffer.copyPixelsFromBuffer(image.planes[0].buffer) }
+                        val imageRotation = image.imageInfo.rotationDegrees
+
+                        detectFaces(bitmapBuffer, imageRotation)
+                        detectObjects(bitmapBuffer, imageRotation)
                     }
                 }
 
@@ -115,11 +124,32 @@ class CameraActivity : AppCompatActivity(), ObjectDetectorAnalyzer.DetectorListe
         }
     }
 
-    private fun detectObjects(image: ImageProxy) {
-        // Copy out RGB bits to the shared bitmap buffer
-        image.use { bitmapBuffer.copyPixelsFromBuffer(image.planes[0].buffer) }
+    private fun detectFaces(bitmapBuffer: Bitmap, imageRotation: Int) {
 
-        val imageRotation = image.imageInfo.rotationDegrees
+        val inputImage = InputImage.fromBitmap(bitmapBuffer, imageRotation)
+
+        val result = detector.process(inputImage)
+            .addOnSuccessListener { faces ->
+                // Task completed successfully
+                viewBinding.overlay.setFaceResults(
+                    faces,
+                    inputImage.height,
+                    inputImage.width
+                )
+
+                /*
+                for face in faces:
+                    preprocessed_image = DLModel.preprocess(face, bitmapBuffer, imageRotation)
+                    happiness_value = DLModel.predict(preprocessed_image)
+                    // send happiness_value to database
+                 */
+            }
+            .addOnFailureListener { e ->
+                Log.e("Exception:", e.toString())
+            }
+    }
+
+    private fun detectObjects(bitmapBuffer: Bitmap, imageRotation: Int) {
         // Pass Bitmap and rotation to the object detector helper for processing and detection
         objectDetector.detect(bitmapBuffer, imageRotation)
     }
@@ -138,6 +168,14 @@ class CameraActivity : AppCompatActivity(), ObjectDetectorAnalyzer.DetectorListe
         imageHeight: Int,
         imageWidth: Int
     ) {
+        viewBinding.overlay.setResults(
+            results ?: LinkedList<Detection>(),
+            imageHeight,
+            imageWidth
+        )
+
+        // Force a redraw
+        viewBinding.overlay.invalidate()
         Log.d("Results:", results.toString())
     }
 

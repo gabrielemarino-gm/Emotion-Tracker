@@ -10,11 +10,14 @@ import android.location.LocationManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
 import java.util.*
+
 
 class MapActivity: AppCompatActivity()
 {
@@ -26,7 +29,14 @@ class MapActivity: AppCompatActivity()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
 
-        Configuration.getInstance().userAgentValue = "com.example.localizecell"
+        Configuration.getInstance().userAgentValue = "it.unipi.dii.emotion_tracker"
+
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
+        val myRef: DatabaseReference = database.getReference("positions")
+
+        //myRef.setValue("Hello, World!")
+
+        println("firebase db")
 
 
         val map = findViewById<org.osmdroid.views.MapView>(R.id.map)
@@ -75,6 +85,9 @@ class MapActivity: AppCompatActivity()
 
                 // println("lat:${latitude}\nlong:${longitude}\nstreet:${street}\ncity:${city}")
 
+                val location_cell=LocationCell(latitude,longitude,street,city)
+                myRef.push().setValue(location_cell)
+
                 // delete the older mark into the map
                 val oldMarker = map.overlays.firstOrNull { it is Marker } as Marker?
                 if (oldMarker != null) {
@@ -104,4 +117,11 @@ class MapActivity: AppCompatActivity()
 
         // locationManager.removeUpdates(locationListener)
     }
+}
+
+class LocationCell(latitude: Double, longitude: Double, street: String?, city: String?) {
+        var latitude: Double = latitude
+        var longitude: Double = longitude
+        var street: String? = street
+        var city : String? = city
 }
