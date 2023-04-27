@@ -111,7 +111,7 @@ class MapActivity: AppCompatActivity()
                 marker.position = GeoPoint(latitude, longitude)
                 marker.title = "lat:${latitude}\n" +
                         "long:${longitude}\n" +
-                        " street:${street}\n" +
+                        "street:${street}\n" +
                         "city:${city}"
                 map.overlays.add(marker)
             }
