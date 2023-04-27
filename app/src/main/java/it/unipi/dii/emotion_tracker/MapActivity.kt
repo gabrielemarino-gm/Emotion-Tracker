@@ -1,17 +1,15 @@
 package it.unipi.dii.emotion_tracker
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
-import android.location.LocationManager
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.*
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import org.osmdroid.config.Configuration
@@ -41,6 +39,10 @@ class MapActivity: AppCompatActivity()
 
         println("firebase db")
 
+        var position_obtained: Int = 0
+
+        println("ciclo ${position_obtained}")
+
 
         val map = findViewById<org.osmdroid.views.MapView>(R.id.map)
         map.setTileSource(TileSourceFactory.MAPNIK)
@@ -53,11 +55,11 @@ class MapActivity: AppCompatActivity()
         val startPoint = GeoPoint(41.8902, 12.4922)
         mapController.setCenter(startPoint)
 
-        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        /*val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             println("GPS provider is not enabled")
-        }
+        }*/
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             &&
@@ -72,7 +74,60 @@ class MapActivity: AppCompatActivity()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        fusedLocationClient.lastLocation
+        val locRequest=LocationRequest.create()
+        locRequest.setInterval(10000)
+        locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+
+        val locCallback=object : LocationCallback(){
+            override fun onLocationResult(loc_result: LocationResult) {
+                if(loc_result==null){
+                    return;
+                }
+                //for(location: Location in loc_result.locations){
+                if(position_obtained==0) {
+                    var location: Location = loc_result.locations[0]  //to take only the first one
+                    val latitude = location.latitude
+                    val longitude = location.longitude
+                    Log.d("TAG", "Latitude: $latitude, Longitude: $longitude")
+                    val geocoder = Geocoder(applicationContext, Locale.getDefault())
+                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                    val address = addresses?.get(0)
+
+                    val street = address?.thoroughfare
+                    val city = address?.locality
+
+
+                    // println("lat:${latitude}\nlong:${longitude}\nstreet:${street}\ncity:${city}")
+
+                    val location_cell = LocationCell(latitude, longitude, street, city)
+                    myRef.push().setValue(location_cell)
+
+                    position_obtained = 1
+
+                    println("scrittura ${position_obtained}")
+
+                    val marker = Marker(map)
+                    marker.position = GeoPoint(latitude, longitude)
+                    marker.title = "lat:${latitude}\n" +
+                            "long:${longitude}\n" +
+                            "street:${street}\n" +
+                            "city:${city}"
+                    map.overlays.add(marker)
+
+                }
+                //}
+            }
+        }
+
+
+        fusedLocationClient.requestLocationUpdates(
+            locRequest,
+            locCallback,
+            Looper.getMainLooper()
+        )
+
+
+        /*fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
                 // Got last known location. In some rare situations, this can be null.
                 if (location != null) {
@@ -106,7 +161,7 @@ class MapActivity: AppCompatActivity()
             }
             .addOnFailureListener { e ->
                 Log.d("TAG", "Error getting location: ${e.message}")
-            }
+            }*/
 
         /*val locationListener = object : LocationListener
         {
