@@ -27,6 +27,7 @@ class MapActivity: AppCompatActivity()
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
+        //FirebaseApp.initializeApp(this);
         setContentView(R.layout.activity_map)
 
         Configuration.getInstance().userAgentValue = "it.unipi.dii.emotion_tracker"
