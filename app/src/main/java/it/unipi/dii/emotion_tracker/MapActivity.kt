@@ -5,11 +5,13 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import org.osmdroid.config.Configuration
@@ -22,7 +24,7 @@ import java.util.*
 class MapActivity: AppCompatActivity()
 {
     private val MY_PERMISSIONS_REQUEST_LOCATION = 123
-
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
@@ -68,7 +70,45 @@ class MapActivity: AppCompatActivity()
             return
         }
 
-        val locationListener = object : LocationListener
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                // Got last known location. In some rare situations, this can be null.
+                if (location != null) {
+                    val latitude = location.latitude
+                    val longitude = location.longitude
+                    Log.d("TAG", "Latitude: $latitude, Longitude: $longitude")
+                    val geocoder = Geocoder(applicationContext, Locale.getDefault())
+                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                    val address = addresses?.get(0)
+
+                    val street = address?.thoroughfare
+                    val city = address?.locality
+
+
+                    // println("lat:${latitude}\nlong:${longitude}\nstreet:${street}\ncity:${city}")
+
+                    val location_cell=LocationCell(latitude,longitude,street,city)
+                    myRef.push().setValue(location_cell)
+
+                    val marker = Marker(map)
+                    marker.position = GeoPoint(latitude, longitude)
+                    marker.title = "lat:${latitude}\n" +
+                            "long:${longitude}\n" +
+                            "street:${street}\n" +
+                            "city:${city}"
+                    map.overlays.add(marker)
+
+                } else {
+                    Log.d("TAG", "No location found")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.d("TAG", "Error getting location: ${e.message}")
+            }
+
+        /*val locationListener = object : LocationListener
         {
             override fun onLocationChanged(location: Location)
             {
@@ -116,7 +156,7 @@ class MapActivity: AppCompatActivity()
 
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, locationListener)
 
-        // locationManager.removeUpdates(locationListener)
+        // locationManager.removeUpdates(locationListener)*/
     }
 }
 
