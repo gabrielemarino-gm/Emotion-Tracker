@@ -102,13 +102,13 @@ class MapActivity: AppCompatActivity()
 
                     //println("scrittura ${position_obtained}")
 
-                    val marker = Marker(map)
+                    /*val marker = Marker(map)
                     marker.position = GeoPoint(latitude, longitude)
                     marker.title = "lat:${latitude}\n" +
                             "long:${longitude}\n" +
                             "street:${street}\n" +
                             "city:${city}"
-                    map.overlays.add(marker)
+                    map.overlays.add(marker)*/
 
                 }
                 //}
@@ -132,17 +132,17 @@ class MapActivity: AppCompatActivity()
             override fun onDataChange(snapshot: DataSnapshot) {
                 // Loop through the results and do something with each one
                 snapshot.children.forEach { child ->
-                    val childData = child.value as HashMap<String, Int>
+                    val childData = child.value as HashMap<String,Any>
                     //println(childData!!::class.simpleName)
-                    println(childData)
+                    //println(childData)
                     //var childD=HashMap<String, Int>()
                     //childD= childData as HashMap<String, Int>
                     println(childData.get("latitude"))
                     //val jsonData= Json.decodeFromString<LocationCell>(childData.toString())
+                    var latitude: Double = childData.get("latitude") as Double
+                    var longitude: Double = childData.get("longitude") as Double
                     val marker = Marker(map)
-                    marker.position = GeoPoint(childData.get("latitude")!!,
-                        childData.get("longitude")!!
-                    )
+                    marker.position = GeoPoint(latitude, longitude)
                     marker.title = "lat:${childData.get("latitude")}\n" +
                             "long:${childData.get("longitude")}\n" +
                             "street:${childData.get("street")}\n" +
