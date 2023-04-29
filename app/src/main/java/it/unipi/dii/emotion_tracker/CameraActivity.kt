@@ -19,16 +19,19 @@ import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import it.unipi.dii.emotion_tracker.databinding.ActivityCameraBinding
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import org.tensorflow.lite.task.gms.vision.classifier.Classifications
 import org.tensorflow.lite.task.gms.vision.detector.Detection
+import java.nio.ByteBuffer
 import java.util.LinkedList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class CameraActivity : AppCompatActivity(), ObjectDetectorAnalyzer.DetectorListener {
+class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
     private lateinit var viewBinding: ActivityCameraBinding
     private lateinit var cameraExecutor: ExecutorService
     // TODO replace with custom model
-    private lateinit var objectDetector: ObjectDetectorAnalyzer
+    private lateinit var model: EmotionRecognizer
     private lateinit var bitmapBuffer: Bitmap
     private val detector = FaceDetection.getClient()
 
@@ -40,9 +43,9 @@ class CameraActivity : AppCompatActivity(), ObjectDetectorAnalyzer.DetectorListe
         setContentView(viewBinding.root)
 
         // TODO replace with custom model
-        objectDetector = ObjectDetectorAnalyzer(
+        model = EmotionRecognizer(
             context = this,
-            objectDetectorListener = this)
+            resultsListener = this)
 
         // create thread that will execute image processing
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -151,7 +154,7 @@ class CameraActivity : AppCompatActivity(), ObjectDetectorAnalyzer.DetectorListe
 
     private fun detectObjects(bitmapBuffer: Bitmap, imageRotation: Int) {
         // Pass Bitmap and rotation to the object detector helper for processing and detection
-        objectDetector.detect(bitmapBuffer, imageRotation)
+        model.detect(bitmapBuffer, imageRotation)
     }
 
 
@@ -163,17 +166,11 @@ class CameraActivity : AppCompatActivity(), ObjectDetectorAnalyzer.DetectorListe
     // Update UI after objects have been detected. Extracts original image height/width
     // to scale and place bounding boxes properly through OverlayView
     override fun onResults(
-        results: MutableList<Detection>?,
+        results: Float,
         inferenceTime: Long,
         imageHeight: Int,
         imageWidth: Int
     ) {
-        viewBinding.overlay.setResults(
-            results ?: LinkedList<Detection>(),
-            imageHeight,
-            imageWidth
-        )
-
         // Force a redraw
         viewBinding.overlay.invalidate()
         Log.d("Results:", results.toString())
@@ -186,8 +183,6 @@ class CameraActivity : AppCompatActivity(), ObjectDetectorAnalyzer.DetectorListe
     }
 
     override fun onInitialized() {
-        objectDetector.setupObjectDetector()
-
         // Request camera permissions
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             startCamera()
