@@ -11,7 +11,6 @@ import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
-import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
@@ -19,18 +18,13 @@ import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import it.unipi.dii.emotion_tracker.databinding.ActivityCameraBinding
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import org.tensorflow.lite.task.gms.vision.classifier.Classifications
-import org.tensorflow.lite.task.gms.vision.detector.Detection
-import java.nio.ByteBuffer
-import java.util.LinkedList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
 
 class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
     private lateinit var viewBinding: ActivityCameraBinding
     private lateinit var cameraExecutor: ExecutorService
-    // TODO replace with custom model
     private lateinit var model: EmotionRecognizer
     private lateinit var bitmapBuffer: Bitmap
     private val detector = FaceDetection.getClient()
@@ -42,7 +36,6 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        // TODO replace with custom model
         model = EmotionRecognizer(
             context = this,
             resultsListener = this)
@@ -88,6 +81,7 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
 
                         // Copy out RGB bits to the shared bitmap buffer
                         image.use { bitmapBuffer.copyPixelsFromBuffer(image.planes[0].buffer) }
+
                         val imageRotation = image.imageInfo.rotationDegrees
 
                         detectFaces(bitmapBuffer, imageRotation)
@@ -140,12 +134,44 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
                     inputImage.width
                 )
 
-                /*
-                for face in faces:
-                    preprocessed_image = DLModel.preprocess(face, bitmapBuffer, imageRotation)
-                    happiness_value = DLModel.predict(preprocessed_image)
+                for (face in faces){
+                    val boundingBox = face.boundingBox
+                    Log.d("Rotation:", imageRotation.toString())
+                    Log.d("Left bbox:", boundingBox.left.toString())
+                    Log.d("Bottom bbox:", boundingBox.bottom.toString())
+                    Log.d("Right bbox:", boundingBox.right.toString())
+                    Log.d("Top bbox:", boundingBox.top.toString())
+                    Log.d("width bbox:", boundingBox.width().toString())
+                    Log.d("height bbox:", boundingBox.height().toString())
+                    Log.d("entire bitmap width:", bitmapBuffer.width.toString())
+                    Log.d("entire bitmap height:", bitmapBuffer.height.toString())
+                    var startingPointLeft = bitmapBuffer.width - boundingBox.bottom
+                    var width = boundingBox.width()
+                    if (bitmapBuffer.width - boundingBox.bottom < 0){
+                        startingPointLeft = 0
+                    }
+                    if (boundingBox.width() > boundingBox.bottom){
+                        width = boundingBox.bottom
+                    }
+
+                    var startingPointTop = boundingBox.left
+                    var height = boundingBox.height()
+                    if (boundingBox.left < 0){
+                        startingPointTop = 0
+                    }
+                    if (boundingBox.left + boundingBox.height() > bitmapBuffer.height){
+                        height = bitmapBuffer.height - boundingBox.left
+                    }
+                    val faceCropImage = Bitmap.createBitmap(bitmapBuffer, startingPointLeft, startingPointTop,
+                                                            width, height)
+                    runOnUiThread {
+                        val tv1 = viewBinding.Bitmap
+                        tv1.setImageBitmap(faceCropImage)
+                    }
+                }
+                    //preprocessed_image = DLModel.preprocess(face, bitmapBuffer, imageRotation)
+                    //happiness_value = DLModel.predict(preprocessed_image)
                     // send happiness_value to database
-                 */
             }
             .addOnFailureListener { e ->
                 Log.e("Exception:", e.toString())
@@ -171,7 +197,6 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
         imageHeight: Int,
         imageWidth: Int
     ) {
-        // Force a redraw
         viewBinding.overlay.invalidate()
         Log.d("Results:", results.toString())
     }

@@ -12,6 +12,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <ImageView
+        android:id="@+id/Bitmap"
+        android:layout_width="149dp"
+        android:layout_height="132dp"
+        app:layout_constraintStart_toStartOf="@+id/vertical_centerline"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <it.unipi.dii.emotion_tracker.OverlayView
         android:id="@+id/overlay"
         android:layout_height="match_parent"
