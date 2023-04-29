@@ -12,38 +12,46 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <ImageView
-        android:id="@+id/Bitmap"
-        android:layout_width="149dp"
-        android:layout_height="132dp"
-        app:layout_constraintStart_toStartOf="@+id/vertical_centerline"
-        app:layout_constraintTop_toTopOf="parent" />
+    <it.unipi.dii.emotion_tracker.OverlayView
+        android:id="@+id/overlay"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        tools:ignore="MissingClass" />
 
     <Button
         android:id="@+id/image_capture_button"
         android:layout_width="110dp"
         android:layout_height="110dp"
-        android:layout_marginBottom="50dp"
         android:layout_marginEnd="50dp"
+        android:layout_marginBottom="50dp"
         android:elevation="2dp"
-        android:text="take photo"
+        android:text="@string/take_photo"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/vertical_centerline" />
+        app:layout_constraintEnd_toStartOf="@id/vertical_centerline"
+        app:layout_constraintLeft_toLeftOf="parent" />
 
-    <TextView
-        android:id="@+id/label"
+    <Button
+        android:id="@+id/video_capture_button"
         android:layout_width="110dp"
         android:layout_height="110dp"
         android:layout_marginStart="50dp"
         android:layout_marginBottom="50dp"
-        android:background="#FF0000"
         android:elevation="2dp"
-        android:text="you are ..."
-        android:textColor="#000000"
-        android:textSize="24sp"
+        android:text="@string/record_video"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/vertical_centerline" />
+
+    <!-- Preview of the captured photos & Videos in one View-->
+    <TextureView
+        android:id="@+id/view_photos_and_videos"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_constraintBottom_toBottomOf="parent"
+        android:layout_constraintStart_toStartOf="parent"
+        android:layout_constraintWidth_percent="0.20"
+        android:layout_constraintHeight_percent="0.20" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/vertical_centerline"

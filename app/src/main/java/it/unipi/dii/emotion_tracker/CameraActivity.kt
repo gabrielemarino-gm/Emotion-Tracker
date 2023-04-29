@@ -1,11 +1,17 @@
 package it.unipi.dii.emotion_tracker
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.media.Image
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
+import android.widget.Button
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
@@ -42,6 +48,24 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
 
         // create thread that will execute image processing
         cameraExecutor = Executors.newSingleThreadExecutor()
+        // find the button to take a photo
+        val buttonPhoto = findViewById<Button>(R.id.image_capture_button)
+        //image-view of the captured photo
+        val imageView =findViewById<ImageView>(R.id.view_photos_and_videos)
+        buttonPhoto.setOnClickListener{
+            val takePicture = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) {imageBitmap ->
+                // TODO do something with the captured photo
+                imageView.setImageBitmap(imageBitmap)
+            }
+        }
+        // find the button to take a video
+        val buttonVideo = findViewById<Button>(R.id.video_capture_button)
+        buttonVideo.setOnClickListener{
+            // TODO do something with the captured video
+
+        }
+
+
     }
 
     private fun startCamera() {

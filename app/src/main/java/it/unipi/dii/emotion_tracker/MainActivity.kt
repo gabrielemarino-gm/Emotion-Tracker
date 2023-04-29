@@ -14,16 +14,16 @@ class MainActivity : AppCompatActivity()
         setContentView(R.layout.activity_main)
 
         val cameraButton = findViewById<Button>(R.id.btn_toCamera)
-        val button = findViewById<Button>(R.id.btn_toMap)
+        val mapButton = findViewById<Button>(R.id.btn_toMap)
 
 
         cameraButton.setOnClickListener {
             val cameraPage = Intent(this, CameraActivity::class.java)
             startActivity(cameraPage)
         }
-        button.setOnClickListener {
-            val nexPage = Intent(this, MapActivity::class.java)
-            startActivity(nexPage)
+        mapButton.setOnClickListener {
+            val mapPage = Intent(this, MapActivity::class.java)
+            startActivity(mapPage)
         }
     }
 }
