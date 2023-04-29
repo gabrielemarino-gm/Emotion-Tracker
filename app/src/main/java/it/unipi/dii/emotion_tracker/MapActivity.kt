@@ -127,7 +127,7 @@ class MapActivity: AppCompatActivity()
 
     private fun print_markers(myRef: DatabaseReference, map: MapView) {
 
-        //TODO it does not work for the moment
+
         myRef.addListenerForSingleValueEvent(object : ValueEventListener{
             override fun onDataChange(snapshot: DataSnapshot) {
                 // Loop through the results and do something with each one
