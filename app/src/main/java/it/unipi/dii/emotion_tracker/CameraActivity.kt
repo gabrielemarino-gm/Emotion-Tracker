@@ -51,20 +51,11 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
         // find the button to take a photo
         val buttonPhoto = findViewById<Button>(R.id.image_capture_button)
         //image-view of the captured photo
-        val imageView =findViewById<ImageView>(R.id.view_photos_and_videos)
         buttonPhoto.setOnClickListener{
             val takePicture = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) {imageBitmap ->
                 // TODO do something with the captured photo
-                imageView.setImageBitmap(imageBitmap)
             }
         }
-        // find the button to take a video
-        val buttonVideo = findViewById<Button>(R.id.video_capture_button)
-        buttonVideo.setOnClickListener{
-            // TODO do something with the captured video
-
-        }
-
 
     }
 
