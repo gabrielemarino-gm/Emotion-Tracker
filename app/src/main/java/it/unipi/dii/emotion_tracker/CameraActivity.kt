@@ -59,8 +59,6 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
-
-            // TODO change image analyzer
             val imageAnalyzer = ImageAnalysis.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setTargetRotation(viewBinding.viewFinder.display.rotation)
@@ -85,7 +83,6 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
                         val imageRotation = image.imageInfo.rotationDegrees
 
                         detectFaces(bitmapBuffer, imageRotation)
-                        detectObjects(bitmapBuffer, imageRotation)
                     }
                 }
 
@@ -128,23 +125,9 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
         val result = detector.process(inputImage)
             .addOnSuccessListener { faces ->
                 // Task completed successfully
-                viewBinding.overlay.setFaceResults(
-                    faces,
-                    inputImage.height,
-                    inputImage.width
-                )
 
                 for (face in faces){
                     val boundingBox = face.boundingBox
-                    Log.d("Rotation:", imageRotation.toString())
-                    Log.d("Left bbox:", boundingBox.left.toString())
-                    Log.d("Bottom bbox:", boundingBox.bottom.toString())
-                    Log.d("Right bbox:", boundingBox.right.toString())
-                    Log.d("Top bbox:", boundingBox.top.toString())
-                    Log.d("width bbox:", boundingBox.width().toString())
-                    Log.d("height bbox:", boundingBox.height().toString())
-                    Log.d("entire bitmap width:", bitmapBuffer.width.toString())
-                    Log.d("entire bitmap height:", bitmapBuffer.height.toString())
                     var startingPointLeft = bitmapBuffer.width - boundingBox.bottom
                     var width = boundingBox.width()
                     if (bitmapBuffer.width - boundingBox.bottom < 0){
@@ -168,37 +151,27 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
                         val tv1 = viewBinding.Bitmap
                         tv1.setImageBitmap(faceCropImage)
                     }
+                    model.detect(faceCropImage, imageRotation)
                 }
-                    //preprocessed_image = DLModel.preprocess(face, bitmapBuffer, imageRotation)
-                    //happiness_value = DLModel.predict(preprocessed_image)
-                    // send happiness_value to database
             }
             .addOnFailureListener { e ->
                 Log.e("Exception:", e.toString())
             }
     }
 
-    private fun detectObjects(bitmapBuffer: Bitmap, imageRotation: Int) {
-        // Pass Bitmap and rotation to the object detector helper for processing and detection
-        model.detect(bitmapBuffer, imageRotation)
-    }
-
-
     companion object {
         private const val TAG = "Emotion-tracker"
         private const val REQUEST_CODE_PERMISSION = 10
     }
 
-    // Update UI after objects have been detected. Extracts original image height/width
-    // to scale and place bounding boxes properly through OverlayView
-    override fun onResults(
-        results: Float,
-        inferenceTime: Long,
-        imageHeight: Int,
-        imageWidth: Int
-    ) {
-        viewBinding.overlay.invalidate()
-        Log.d("Results:", results.toString())
+    override fun onResults(results: Float, inferenceTime: Long, imageHeight: Int, imageWidth: Int){
+        // Called when the EmotionRecognizer produces results
+        runOnUiThread {
+            val label = viewBinding.label
+            label.text = results.toString()
+        }
+
+        // TODO send happiness_value and current location to database
     }
 
     override fun onError(error: String) {
