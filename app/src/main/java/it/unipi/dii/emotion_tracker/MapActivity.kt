@@ -1,5 +1,7 @@
 package it.unipi.dii.emotion_tracker
 
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -66,6 +68,20 @@ class MapActivity: AppCompatActivity()
                             "street:${childData.get("street")}\n" +
                             "city:${childData.get("city")}" +
                             "emotion:${childData.get("emotion")}"
+
+                    val emotion_level = childData.get("emotion").toString()
+                    //println(emotion_level.toDouble())
+                    if(emotion_level.toDouble() >0.50){
+                        //println("maggiore di 0.50")
+                        val icon = BitmapFactory.decodeResource(resources, R.drawable.happy_smiley_icon)
+                        marker.icon = BitmapDrawable(resources, icon)
+
+                    }
+                    else{
+                        //println("minore di 0.50")
+                        val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_face)
+                        marker.icon = BitmapDrawable(resources, icon)
+                    }
                     map.overlays.add(marker)
                 }
             }
