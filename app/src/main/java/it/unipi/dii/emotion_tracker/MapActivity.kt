@@ -25,7 +25,7 @@ class MapActivity: AppCompatActivity()
         Configuration.getInstance().userAgentValue = "it.unipi.dii.emotion_tracker"
 
         val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
-        val myRef: DatabaseReference = database.getReference("positions")
+        val myRef: DatabaseReference = database.getReference("position_emotion")
 
 
         val map = findViewById<org.osmdroid.views.MapView>(R.id.map)
@@ -64,7 +64,8 @@ class MapActivity: AppCompatActivity()
                     marker.title = "lat:${childData.get("latitude")}\n" +
                             "long:${childData.get("longitude")}\n" +
                             "street:${childData.get("street")}\n" +
-                            "city:${childData.get("city")}"
+                            "city:${childData.get("city")}" +
+                            "emotion:${childData.get("emotion")}"
                     map.overlays.add(marker)
                 }
             }
