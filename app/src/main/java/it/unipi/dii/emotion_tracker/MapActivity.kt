@@ -66,7 +66,7 @@ class MapActivity: AppCompatActivity()
                     marker.title = "lat:${childData.get("latitude")}\n" +
                             "long:${childData.get("longitude")}\n" +
                             "street:${childData.get("street")}\n" +
-                            "city:${childData.get("city")}" +
+                            "city:${childData.get("city")}\n" +
                             "emotion:${childData.get("emotion")}"
 
                     val emotion_level = childData.get("emotion").toString()
