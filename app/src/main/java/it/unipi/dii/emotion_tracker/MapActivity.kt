@@ -27,14 +27,6 @@ class MapActivity: AppCompatActivity()
         val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef: DatabaseReference = database.getReference("positions")
 
-        //myRef.setValue("Hello, World!")
-
-        //println("firebase db")
-
-        var position_obtained: Int = 0
-
-        //println("ciclo ${position_obtained}")
-
 
         val map = findViewById<org.osmdroid.views.MapView>(R.id.map)
         map.setTileSource(TileSourceFactory.MAPNIK)
@@ -47,72 +39,6 @@ class MapActivity: AppCompatActivity()
         val startPoint = GeoPoint(41.8902, 12.4922)
         mapController.setCenter(startPoint)
 
-
-
-        /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
-
-            ActivityCompat.requestPermissions(this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                MY_PERMISSIONS_REQUEST_LOCATION)
-            return
-        }
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        val locRequest=LocationRequest.create()
-        locRequest.setInterval(10000)
-        locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-
-        val locCallback=object : LocationCallback(){
-            override fun onLocationResult(loc_result: LocationResult) {
-                if(loc_result==null){
-                    return;
-                }
-                //for(location: Location in loc_result.locations){
-                if(position_obtained==0) {
-                    var location: Location = loc_result.locations[0]  //to take only the first one
-                    val latitude = location.latitude
-                    val longitude = location.longitude
-                    Log.d("TAG", "Latitude: $latitude, Longitude: $longitude")
-                    val geocoder = Geocoder(applicationContext, Locale.getDefault())
-                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                    val address = addresses?.get(0)
-
-                    val street = address?.thoroughfare
-                    val city = address?.locality
-
-
-                    // println("lat:${latitude}\nlong:${longitude}\nstreet:${street}\ncity:${city}")
-
-                    val location_cell = LocationCell(latitude, longitude, street, city, emotion)
-                    myRef.push().setValue(location_cell)
-
-                    position_obtained = 1
-
-                    //println("scrittura ${position_obtained}")
-
-                    /*val marker = Marker(map)
-                    marker.position = GeoPoint(latitude, longitude)
-                    marker.title = "lat:${latitude}\n" +
-                            "long:${longitude}\n" +
-                            "street:${street}\n" +
-                            "city:${city}"
-                    map.overlays.add(marker)*/
-
-                }
-                //}
-            }
-        }
-
-
-        fusedLocationClient.requestLocationUpdates(
-            locRequest,
-            locCallback,
-            Looper.getMainLooper()
-        )*/
 
         print_markers(myRef,map)
     }
