@@ -1,22 +1,14 @@
 package it.unipi.dii.emotion_tracker
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.location.Geocoder
-import android.location.Location
 import android.os.Bundle
-import android.os.Looper
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.firebase.database.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import java.util.*
 
 
 class MapActivity: AppCompatActivity()
@@ -57,7 +49,7 @@ class MapActivity: AppCompatActivity()
 
 
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
@@ -95,7 +87,7 @@ class MapActivity: AppCompatActivity()
 
                     // println("lat:${latitude}\nlong:${longitude}\nstreet:${street}\ncity:${city}")
 
-                    val location_cell = LocationCell(latitude, longitude, street, city)
+                    val location_cell = LocationCell(latitude, longitude, street, city, emotion)
                     myRef.push().setValue(location_cell)
 
                     position_obtained = 1
@@ -120,7 +112,7 @@ class MapActivity: AppCompatActivity()
             locRequest,
             locCallback,
             Looper.getMainLooper()
-        )
+        )*/
 
         print_markers(myRef,map)
     }
@@ -159,9 +151,16 @@ class MapActivity: AppCompatActivity()
     }
 }
 
-class LocationCell(latitude: Double, longitude: Double, street: String?, city: String?) {
+class LocationCell(
+    latitude: Double,
+    longitude: Double,
+    street: String?,
+    city: String?,
+    emotion: String
+) {
         var latitude: Double = latitude
         var longitude: Double = longitude
         var street: String? = street
         var city : String? = city
+        var emotion : String = emotion
 }

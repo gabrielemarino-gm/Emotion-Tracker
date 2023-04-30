@@ -1,15 +1,14 @@
 package it.unipi.dii.emotion_tracker
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.media.Image
+import android.location.Geocoder
+import android.location.Location
 import android.os.Bundle
-import android.provider.MediaStore
+import android.os.Looper
 import android.util.Log
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -21,9 +20,13 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.*
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import it.unipi.dii.emotion_tracker.databinding.ActivityCameraBinding
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -34,6 +37,9 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
     private lateinit var model: EmotionRecognizer
     private lateinit var bitmapBuffer: Bitmap
     private val detector = FaceDetection.getClient()
+
+    private val MY_PERMISSIONS_REQUEST_LOCATION = 123
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
@@ -187,6 +193,73 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
         }
 
         // TODO send happiness_value and current location to database
+        println(results.toString())
+        save_position(results.toString())
+
+    }
+
+    private fun save_position(emotion: String) {
+        //TODO("Not yet implemented")
+
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
+        val myRef: DatabaseReference = database.getReference("position_emotion")
+
+        var position_obtained: Int = 0
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                MY_PERMISSIONS_REQUEST_LOCATION)
+            return
+        }
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        val locRequest= LocationRequest.create()
+        locRequest.setInterval(10000)
+        locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+
+        val locCallback=object : LocationCallback(){
+            override fun onLocationResult(loc_result: LocationResult) {
+                if(loc_result==null){
+                    return;
+                }
+                //for(location: Location in loc_result.locations){
+                if(position_obtained==0) {
+                    var location: Location = loc_result.locations[0]  //to take only the first one
+                    val latitude = location.latitude
+                    val longitude = location.longitude
+                    Log.d("TAG", "Latitude: $latitude, Longitude: $longitude")
+                    val geocoder = Geocoder(applicationContext, Locale.getDefault())
+                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                    val address = addresses?.get(0)
+
+                    val street = address?.thoroughfare
+                    val city = address?.locality
+
+                    // println("lat:${latitude}\nlong:${longitude}\nstreet:${street}\ncity:${city}")
+
+                    val location_cell = LocationCell(latitude, longitude, street, city,emotion)
+                    myRef.push().setValue(location_cell)
+
+                    position_obtained = 1
+
+                }
+                //}
+            }
+        }
+
+
+        fusedLocationClient.requestLocationUpdates(
+            locRequest,
+            locCallback,
+            Looper.getMainLooper()
+        )
+
     }
 
     override fun onError(error: String) {
