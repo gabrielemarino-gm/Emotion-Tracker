@@ -73,13 +73,13 @@ class MapActivity: AppCompatActivity()
                     //println(emotion_level.toDouble())
                     if(emotion_level.toDouble() >0.50){
                         //println("maggiore di 0.50")
-                        val icon = BitmapFactory.decodeResource(resources, R.drawable.happy_smiley_icon)
+                        val icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
                         marker.icon = BitmapDrawable(resources, icon)
 
                     }
                     else{
                         //println("minore di 0.50")
-                        val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_face)
+                        val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_red_face)
                         marker.icon = BitmapDrawable(resources, icon)
                     }
                     map.overlays.add(marker)
