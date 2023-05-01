@@ -57,7 +57,7 @@ class MapActivity: AppCompatActivity()
                     //println(childData)
                     //var childD=HashMap<String, Int>()
                     //childD= childData as HashMap<String, Int>
-                    println(childData.get("latitude"))
+                    //println(childData.get("latitude"))
                     //val jsonData= Json.decodeFromString<LocationCell>(childData.toString())
                     var latitude: Double = childData.get("latitude") as Double
                     var longitude: Double = childData.get("longitude") as Double
