@@ -43,11 +43,11 @@
             android:name=".MapActivity"
             android:exported="false" />
         <activity
-            android:name=".CameraActivity"
+            android:name=".TrialActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:exported="false"></activity>
+            android:exported="false"/>
     </application>
 
 </manifest>

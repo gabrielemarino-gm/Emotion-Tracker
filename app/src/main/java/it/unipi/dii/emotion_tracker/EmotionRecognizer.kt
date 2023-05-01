@@ -35,8 +35,6 @@ class EmotionRecognizer(
             }
             TfLite.initialize(context, optionsBuilder.build())
         }.addOnSuccessListener {
-            // call to overridden function in CameraActivity
-            resultsListener.onInitialized()
         }.addOnFailureListener{
             resultsListener.onError("TfLiteVision failed to initialize: "
                     + it.message)
@@ -79,7 +77,6 @@ class EmotionRecognizer(
     }
 
     interface ResultsListener {
-        fun onInitialized()
         fun onError(error: String)
         fun onResults(
             results: Float,

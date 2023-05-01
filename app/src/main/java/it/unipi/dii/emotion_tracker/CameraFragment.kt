@@ -8,10 +8,12 @@ import android.location.Location
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
-import android.widget.Button
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -20,23 +22,28 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import com.google.android.gms.location.*
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
-import it.unipi.dii.emotion_tracker.databinding.ActivityCameraBinding
+import it.unipi.dii.emotion_tracker.databinding.FragmentCameraBinding
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.math.roundToInt
 
 
-class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
-    private lateinit var viewBinding: ActivityCameraBinding
+class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
+    private var binding: FragmentCameraBinding? = null
+    private val fragmentCameraBinding
+        get() = binding!!
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var model: EmotionRecognizer
     private lateinit var bitmapBuffer: Bitmap
     private val detector = FaceDetection.getClient()
+
 
     private val MY_PERMISSIONS_REQUEST_LOCATION = 123
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -44,29 +51,46 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
 
-        //bind layout to Kotlin objects
-        viewBinding = ActivityCameraBinding.inflate(layoutInflater)
-        setContentView(viewBinding.root)
-
         model = EmotionRecognizer(
-            context = this,
+            context = requireContext(),
             resultsListener = this)
 
-        // create thread that will execute image processing
-        cameraExecutor = Executors.newSingleThreadExecutor()
-        // find the button to take a photo
-        val buttonPhoto = findViewById<Button>(R.id.image_capture_button)
-        //image-view of the captured photo
-        buttonPhoto.setOnClickListener{
-            val takePicture = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) {imageBitmap ->
-                // TODO do something with the captured photo
+        val cameraLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (isGranted) {
+                startCamera()
+            }
+            else {
+                activity?.runOnUiThread{
+                    Toast.makeText(requireContext(),
+                        "Permissions not granted by the user.",
+                        Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
+        cameraLauncher.launch(Manifest.permission.CAMERA)
+
+        // create thread that will execute image processing
+        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        //bind layout to Kotlin objects
+        binding = FragmentCameraBinding.inflate(inflater)
+
+        return fragmentCameraBinding.root
+    }
+
+
+
     private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
 
         cameraProviderFuture.addListener({
             // Used to bind the lifecycle of cameras to the lifecycle owner
@@ -75,14 +99,14 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
             // Preview
             val preview = Preview.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(viewBinding.viewFinder.display.rotation)
+                .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
                 .build()
                 .also {
-                    it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
+                    it.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
                 }
             val imageAnalyzer = ImageAnalysis.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(viewBinding.viewFinder.display.rotation)
+                .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()
@@ -122,21 +146,7 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
                 Log.e(TAG, "Use case binding failed", exc)
             }
 
-        }, ContextCompat.getMainExecutor(this))
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSION) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                startCamera()
-            } else {
-                Toast.makeText(this,
-                    "Permissions not granted by the user.",
-                    Toast.LENGTH_SHORT).show()
-                finish()
-            }
-        }
+        }, ContextCompat.getMainExecutor(requireContext()))
     }
 
     private fun detectFaces(bitmapBuffer: Bitmap, imageRotation: Int) {
@@ -168,10 +178,11 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
                     }
                     val faceCropImage = Bitmap.createBitmap(bitmapBuffer, startingPointLeft, startingPointTop,
                                                             width, height)
-                    runOnUiThread {
-                        val tv1 = viewBinding.Bitmap
+                    activity?.runOnUiThread {
+                        val tv1 = fragmentCameraBinding.Bitmap
                         tv1.setImageBitmap(faceCropImage)
                     }
+
                     model.detect(faceCropImage, imageRotation)
                 }
             }
@@ -187,37 +198,39 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
 
     override fun onResults(results: Float, inferenceTime: Long, imageHeight: Int, imageWidth: Int){
         // Called when the EmotionRecognizer produces results
-        runOnUiThread {
-            val label = viewBinding.label
-            label.text = results.toString()
+        activity?.runOnUiThread {
+            val label = fragmentCameraBinding.label
+            val roundedHappinessIndex = (results * 100.0).roundToInt() / 100.0
+            label.text = roundedHappinessIndex.toString()
         }
 
         // TODO send happiness_value and current location to database
         println(results.toString())
         save_position(results.toString())
-
     }
 
     private fun save_position(emotion: String) {
         //TODO("Not yet implemented")
 
+        if (context == null){
+            return
+        }
+
         val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef: DatabaseReference = database.getReference("position_emotion")
 
         var position_obtained: Int = 0
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
 
-            ActivityCompat.requestPermissions(this,
+            ActivityCompat.requestPermissions(requireActivity(),
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 MY_PERMISSIONS_REQUEST_LOCATION)
             return
         }
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
         val locRequest= LocationRequest.create()
         locRequest.setInterval(10000)
@@ -234,7 +247,10 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
                     val latitude = location.latitude
                     val longitude = location.longitude
                     Log.d("TAG", "Latitude: $latitude, Longitude: $longitude")
-                    val geocoder = Geocoder(applicationContext, Locale.getDefault())
+                    if (context == null){
+                        return
+                    }
+                    val geocoder = Geocoder(requireContext(), Locale.getDefault())
                     val addresses = geocoder.getFromLocation(latitude, longitude, 1)
                     val address = addresses?.get(0)
 
@@ -253,28 +269,40 @@ class CameraActivity : AppCompatActivity(), EmotionRecognizer.ResultsListener {
             }
         }
 
-
         fusedLocationClient.requestLocationUpdates(
             locRequest,
             locCallback,
             Looper.getMainLooper()
         )
+    }
 
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
+
+        // Shut down our background executor
+        cameraExecutor.shutdown()
     }
 
     override fun onError(error: String) {
-        Toast.makeText(this,
-            "Hello, onError arrived",
-            Toast.LENGTH_SHORT).show()
+        activity?.runOnUiThread {
+            Toast.makeText(requireContext(),
+                "Hello, onError arrived",
+                Toast.LENGTH_SHORT).show()
+        }
     }
 
-    override fun onInitialized() {
-        // Request camera permissions
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            startCamera()
-        } else {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.CAMERA), REQUEST_CODE_PERMISSION)
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (requestCode == REQUEST_CODE_PERMISSION) {
+            if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                startCamera()
+            } else {
+                activity?.runOnUiThread{
+                    Toast.makeText(requireContext(),
+                        "Permissions not granted by the user.",
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }
