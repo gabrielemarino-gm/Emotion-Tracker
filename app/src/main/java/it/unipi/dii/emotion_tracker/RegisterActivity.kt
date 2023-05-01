@@ -16,6 +16,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var passwordText: EditText
     //private lateinit var dateOfBirth: EditText
     private lateinit var registerButton: Button
+    private lateinit var backButton: Button
 
 
 
@@ -27,6 +28,7 @@ class RegisterActivity : AppCompatActivity() {
         passwordText = findViewById(R.id.password_reg);
         //dateOfBirth = findViewById(R.id.date_of_birth)
         registerButton = findViewById(R.id.register);
+        backButton = findViewById(R.id.back_button);
 
         val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef: DatabaseReference = database.getReference("users")
@@ -39,6 +41,14 @@ class RegisterActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+
+        backButton.setOnClickListener(){
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+
     }
 
 
