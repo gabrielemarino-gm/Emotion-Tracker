@@ -4,9 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
@@ -34,12 +34,24 @@ class RegisterActivity : AppCompatActivity() {
         val myRef: DatabaseReference = database.getReference("users")
 
         registerButton.setOnClickListener(){
-            val user= User(usernameText.text.toString(),encryptPassword(passwordText.text.toString()))
-            myRef.push().setValue(user)
 
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            finish()
+            controlloUsername(usernameText.text.toString(),myRef) { controllo ->
+                if (controllo) {
+                    val user = User(
+                        usernameText.text.toString(),
+                        encryptPassword(passwordText.text.toString())
+                    )
+                    myRef.push().setValue(user)
+
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                } else {
+                    usernameText.setText("")
+                    passwordText.setText("")
+                    Toast.makeText(this, "Username already used", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         backButton.setOnClickListener(){
@@ -48,6 +60,32 @@ class RegisterActivity : AppCompatActivity() {
             finish()
         }
 
+
+    }
+
+    private fun controlloUsername(username: String, myRef: DatabaseReference, callback: (Boolean) -> Unit){
+
+        myRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var userExists = true
+                snapshot.children.forEach { child ->
+                    val childData = child.value as HashMap<String,String>
+
+                    val username_db=childData.get("username")
+
+                    if(username==username_db ){
+                        userExists = false
+                    }
+                }
+                callback(userExists)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Handle error case
+                println("error in retrieving users")
+                callback(false)
+            }
+        })
 
     }
 
