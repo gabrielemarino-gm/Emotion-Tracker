@@ -7,6 +7,8 @@ import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 
 class RegisterActivity : AppCompatActivity() {
 
@@ -30,13 +32,28 @@ class RegisterActivity : AppCompatActivity() {
         val myRef: DatabaseReference = database.getReference("users")
 
         registerButton.setOnClickListener(){
-            val user= User(usernameText.text.toString(),passwordText.text.toString())
+            val user= User(usernameText.text.toString(),encryptPassword(passwordText.text.toString()))
             myRef.push().setValue(user)
 
             val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
             finish()
         }
+    }
+
+
+    public fun encryptPassword(password: String): String {
+        val messageDigest = MessageDigest.getInstance("SHA-256")
+        val hash = messageDigest.digest(password.toByteArray(StandardCharsets.UTF_8))
+        val hexString = StringBuilder()
+        for (byte in hash) {
+            val hex = Integer.toHexString(0xff and byte.toInt())
+            if (hex.length == 1) {
+                hexString.append('0')
+            }
+            hexString.append(hex)
+        }
+        return hexString.toString()
     }
 }
 

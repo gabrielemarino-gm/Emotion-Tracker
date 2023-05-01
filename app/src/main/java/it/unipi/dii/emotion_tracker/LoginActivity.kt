@@ -7,6 +7,8 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.database.*
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 
 class LoginActivity : AppCompatActivity() {
 
@@ -70,7 +72,7 @@ class LoginActivity : AppCompatActivity() {
                     val password_db=childData.get("password")
 
 
-                    if(username==username_db && password==password_db){
+                    if(username==username_db && password_db?.let { isPasswordMatch(password, it) } == true){
                         userExists = true
                     }
                 }
@@ -83,6 +85,20 @@ class LoginActivity : AppCompatActivity() {
                 callback(false)
             }
         })
+    }
+
+    private fun isPasswordMatch(inputPassword: String, storedPasswordHash: String): Boolean {
+        val messageDigest = MessageDigest.getInstance("SHA-256")
+        val hash = messageDigest.digest(inputPassword.toByteArray(StandardCharsets.UTF_8))
+        val hexString = StringBuilder()
+        for (byte in hash) {
+            val hex = Integer.toHexString(0xff and byte.toInt())
+            if (hex.length == 1) {
+                hexString.append('0')
+            }
+            hexString.append(hex)
+        }
+        return hexString.toString() == storedPasswordHash
     }
 
 }
