@@ -59,7 +59,6 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             ActivityResultContracts.RequestPermission()
         ) { isGranted ->
             if (isGranted) {
-                startCamera()
             }
             else {
                 activity?.runOnUiThread{
@@ -71,9 +70,6 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         }
 
         cameraLauncher.launch(Manifest.permission.CAMERA)
-
-        // create thread that will execute image processing
-        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
     override fun onCreateView(
@@ -87,7 +83,12 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         return fragmentCameraBinding.root
     }
 
-
+    override fun onResume(){
+        super.onResume()
+        // create thread that will execute image processing
+        cameraExecutor = Executors.newSingleThreadExecutor()
+        startCamera()
+    }
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
@@ -147,6 +148,20 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             }
 
         }, ContextCompat.getMainExecutor(requireContext()))
+    }
+
+    override fun onStop(){
+        super.onStop()
+        // Shut down our background executor
+        cameraExecutor.shutdown()
+    }
+
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
+
+        // Shut down our background executor
+        cameraExecutor.shutdown()
     }
 
     private fun detectFaces(bitmapBuffer: Bitmap, imageRotation: Int) {
@@ -274,14 +289,6 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             locCallback,
             Looper.getMainLooper()
         )
-    }
-
-    override fun onDestroyView() {
-        binding = null
-        super.onDestroyView()
-
-        // Shut down our background executor
-        cameraExecutor.shutdown()
     }
 
     override fun onError(error: String) {
