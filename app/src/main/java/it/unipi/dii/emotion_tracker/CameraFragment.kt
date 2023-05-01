@@ -12,7 +12,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
@@ -219,13 +218,13 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             label.text = roundedHappinessIndex.toString()
         }
 
-        // TODO send happiness_value and current location to database
+
         println(results.toString())
         save_position(results.toString())
     }
 
     private fun save_position(emotion: String) {
-        //TODO("Not yet implemented")
+
 
         if (context == null){
             return
