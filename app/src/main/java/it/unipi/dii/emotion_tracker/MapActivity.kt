@@ -1,10 +1,20 @@
 package it.unipi.dii.emotion_tracker
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
+import android.provider.Settings
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.database.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -34,15 +44,30 @@ class MapActivity: AppCompatActivity()
         map.setTileSource(TileSourceFactory.MAPNIK)
         map.setMultiTouchControls(true)
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // Imposta il punto di vista della mappa
-        val mapController = map.controller
-        mapController.setZoom(7.5)
-        val startPoint = GeoPoint(41.8902, 12.4922)
-        mapController.setCenter(startPoint)
+        // Set the starting point on the map
+        setStartPosition(map)
+        // val mapController = map.controller
+        // mapController.setZoom(7.5)
+        // val startPoint = GeoPoint(41.8902, 12.4922)
+        // mapController.setCenter(startPoint)
 
+        // This is useful for make an action when the user scrlol or zoom the map
+        //map.setMapListener(object: MapListener
+        //{
+        //    // Handle scroll event
+        //    override fun onScroll(event: ScrollEvent?): Boolean
+        //    {
+        //        println("SCROLL")
+        //        return true
+        //    }
+        //    override fun onZoom(event: ZoomEvent?): Boolean {
+        //        TODO("Not yet implemented")
+        //    }
+        //})
 
-        print_markers(myRef,map)
+        print_markers(myRef, map)
     }
 
     private fun print_markers(myRef: DatabaseReference, map: MapView) {
@@ -91,6 +116,108 @@ class MapActivity: AppCompatActivity()
                 println("error in retrieving position")
             }
         })
+    }
+
+    private fun setStartPosition(map: MapView)
+    {
+        // Controllare se l'utente ha dato il permesso per avere la localizzazione
+        if(checkPermission())
+        {
+            // Controllare il GPS è attivo
+            if(isLocationEnabled())
+            {
+                // Controllo permessi
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                {
+                    requestPermissions()
+                    return
+                }
+
+
+                // Abbiamo finalmente accesso a latitudine e longitudine
+                fusedLocationClient.lastLocation.addOnCompleteListener(this)
+                {
+                        task ->
+                    val location: Location?= task.result
+                    if(location == null)
+                    {
+                        Toast.makeText(this, "Posizione nulla", Toast.LENGTH_SHORT).show()
+                    }
+                    else
+                    {
+                        val mapController = map.controller
+                        mapController.setZoom(15.5)
+                        //println("DBG: " + location.latitude.toString() + "\t\t\t" + location.latitude.toString())
+                        val startPoint = GeoPoint(location.latitude, location.longitude)
+                        mapController.setCenter(startPoint)
+                    }
+                }
+            }
+            else
+            {
+                // Chiedere di attivare il GPS
+                Toast.makeText(this, "Accendere il GPS", Toast.LENGTH_SHORT).show()
+                val intnet = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
+            }
+        }
+        else
+        {
+            // Chiedere di dare i permessi per GPS
+            requestPermissions()
+        }
+    }
+
+
+    private fun isLocationEnabled(): Boolean
+    {
+        val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        // Devono essere attivi sia il GPS che la connessione a Internet
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER)
+    }
+
+
+    private fun checkPermission(): Boolean
+    {
+        return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+    }
+
+
+    private fun requestPermissions()
+    {
+        ActivityCompat.requestPermissions(this,
+            arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION),
+            MY_PERMISSIONS_REQUEST_LOCATION
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if(requestCode == MY_PERMISSIONS_REQUEST_LOCATION)
+        {
+            if (grantResults.isNotEmpty()
+                &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
+                Toast.makeText(applicationContext, "Granted", Toast.LENGTH_SHORT).show()
+            }
+            else
+            {
+                Toast.makeText(applicationContext, "Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
 
