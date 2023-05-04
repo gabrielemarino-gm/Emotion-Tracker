@@ -42,10 +42,19 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
     private lateinit var model: EmotionRecognizer
     private lateinit var bitmapBuffer: Bitmap
     private val detector = FaceDetection.getClient()
+    private val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
+    private val myRef: DatabaseReference = database.getReference("position_emotion")
 
+    private var latitude: Double = 0.0
+    private var longitude: Double = 0.0
+    private var street: String? = null
+    private var city: String? = null
 
-    private val MY_PERMISSIONS_REQUEST_LOCATION = 123
+    private var happinessAccumulator: Double = 0.0
+    private var counter: Int = 0
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locCallback: LocationCallback
 
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
@@ -55,9 +64,10 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             resultsListener = this)
 
         val cameraLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
+            ActivityResultContracts.RequestMultiplePermissions()
         ) { isGranted ->
-            if (isGranted) {
+            if (isGranted[Manifest.permission.CAMERA]!! && isGranted[Manifest.permission.ACCESS_FINE_LOCATION]!!) {
+                launchLocationRequester()
             }
             else {
                 activity?.runOnUiThread{
@@ -68,7 +78,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             }
         }
 
-        cameraLauncher.launch(Manifest.permission.CAMERA)
+        cameraLauncher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION))
     }
 
     override fun onCreateView(
@@ -87,12 +97,14 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         // create thread that will execute image processing
         cameraExecutor = Executors.newSingleThreadExecutor()
         startCamera()
+        launchLocationRequester()
     }
 
     override fun onStop(){
         super.onStop()
         // Shut down our background executor
         cameraExecutor.shutdown()
+        stopLocationRequester()
     }
 
     override fun onDestroyView() {
@@ -125,7 +137,6 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                 .build()
                 .also {
                     it.setAnalyzer(cameraExecutor) { image ->
-                        Log.d("TAG", "New request")
                         if (!::bitmapBuffer.isInitialized) {
                             // The image rotation and RGB image buffer are initialized only once
                             // the analyzer has started running
@@ -162,6 +173,74 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
         }, ContextCompat.getMainExecutor(requireContext()))
     }
+
+    private fun launchLocationRequester() {
+        /*
+        if (context == null){
+            return
+        }
+        */
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            &&
+            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+
+            ActivityCompat.requestPermissions(requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                MY_PERMISSIONS_REQUEST_LOCATION)
+            return
+        }
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
+        val locRequest = LocationRequest.Builder(10000).setPriority(Priority.PRIORITY_HIGH_ACCURACY).build()
+        //locRequest.setInterval(10000)
+        //locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+
+        locCallback=object : LocationCallback(){
+            override fun onLocationResult(loc_result: LocationResult) {
+                Log.d("TAG", "Location arrived")
+                if(loc_result==null){
+                    return
+                }
+
+                val location: Location = loc_result.lastLocation!!
+                latitude = location.latitude
+                longitude = location.longitude
+                Log.d("TAG", "Latitude: $latitude, Longitude: $longitude")
+                if (context == null){
+                    return
+                }
+                val geocoder = Geocoder(requireContext(), Locale.getDefault())
+                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                val address = addresses?.get(0)
+
+                street = address?.thoroughfare
+                city = address?.locality
+
+                if(counter != 0){
+                    val happinessIndex = happinessAccumulator / counter
+
+                    happinessAccumulator = 0.0
+                    counter = 0
+                    Log.d("TAG", "HappinessIndex: $happinessIndex")
+                    val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex.toString())
+                    myRef.push().setValue(locationCell)
+                }
+            }
+        }
+
+        fusedLocationClient.requestLocationUpdates(
+            locRequest,
+            locCallback,
+            Looper.getMainLooper()
+        )
+    }
+
+    private fun stopLocationRequester(){
+        fusedLocationClient.removeLocationUpdates(locCallback)
+    }
+
     private fun detectFaces(bitmapBuffer: Bitmap, imageRotation: Int) {
 
         val inputImage = InputImage.fromBitmap(bitmapBuffer, imageRotation)
@@ -186,8 +265,8 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                     if (boundingBox.left < 0){
                         startingPointTop = 0
                     }
-                    if (boundingBox.left + boundingBox.height() > bitmapBuffer.height){
-                        height = bitmapBuffer.height - boundingBox.left
+                    if (startingPointTop + boundingBox.height() > bitmapBuffer.height){
+                        height = bitmapBuffer.height - startingPointTop
                     }
                     val faceCropImage = Bitmap.createBitmap(bitmapBuffer, startingPointLeft, startingPointTop,
                                                             width, height)
@@ -206,7 +285,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
     companion object {
         private const val TAG = "Emotion-tracker"
-        private const val REQUEST_CODE_PERMISSION = 10
+        private const val MY_PERMISSIONS_REQUEST_LOCATION = 123
     }
 
     override fun onResults(results: Float, inferenceTime: Long, imageHeight: Int, imageWidth: Int){
@@ -218,75 +297,8 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         }
 
 
-        println(results.toString())
-        save_position(results.toString())
-    }
-
-    private fun save_position(emotion: String) {
-
-
-        if (context == null){
-            return
-        }
-
-        val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
-        val myRef: DatabaseReference = database.getReference("position_emotion")
-
-        var position_obtained: Int = 0
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            &&
-            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
-
-            ActivityCompat.requestPermissions(requireActivity(),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                MY_PERMISSIONS_REQUEST_LOCATION)
-            return
-        }
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-
-        val locRequest= LocationRequest.create()
-        locRequest.setInterval(10000)
-        locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-
-        val locCallback=object : LocationCallback(){
-            override fun onLocationResult(loc_result: LocationResult) {
-                Log.d("TAG", "Location arrived")
-                if(loc_result==null){
-                    return;
-                }
-                //for(location: Location in loc_result.locations){
-                if(position_obtained==0) {
-                    var location: Location = loc_result.locations[0]  //to take only the first one
-                    val latitude = location.latitude
-                    val longitude = location.longitude
-                    Log.d("TAG", "Latitude: $latitude, Longitude: $longitude")
-                    if (context == null){
-                        return
-                    }
-                    val geocoder = Geocoder(requireContext(), Locale.getDefault())
-                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                    val address = addresses?.get(0)
-
-                    val street = address?.thoroughfare
-                    val city = address?.locality
-
-                    // println("lat:${latitude}\nlong:${longitude}\nstreet:${street}\ncity:${city}")
-
-                    val location_cell = LocationCell(latitude, longitude, street, city,emotion)
-                    myRef.push().setValue(location_cell)
-
-                    position_obtained = 1
-                }
-                //}
-            }
-        }
-
-        fusedLocationClient.requestLocationUpdates(
-            locRequest,
-            locCallback,
-            Looper.getMainLooper()
-        )
+        happinessAccumulator += results
+        counter++
     }
 
     override fun onError(error: String) {
@@ -294,20 +306,6 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             Toast.makeText(requireContext(),
                 "Hello, onError arrived",
                 Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        if (requestCode == REQUEST_CODE_PERMISSION) {
-            if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                startCamera()
-            } else {
-                activity?.runOnUiThread{
-                    Toast.makeText(requireContext(),
-                        "Permissions not granted by the user.",
-                        Toast.LENGTH_SHORT).show()
-                }
-            }
         }
     }
 }
