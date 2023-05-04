@@ -1,6 +1,7 @@
 package it.unipi.dii.emotion_tracker
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.location.Geocoder
@@ -22,6 +23,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentTransaction
 import com.google.android.gms.location.*
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -97,7 +99,6 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
     ): View {
         //bind layout to Kotlin objects
         binding = FragmentCameraBinding.inflate(inflater)
-
         return fragmentCameraBinding.root
     }
 
@@ -128,10 +129,13 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
+            val windowManager = requireActivity().windowManager;
+            val rotation = windowManager.defaultDisplay.rotation
+
             // Preview
             val preview = Preview.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
+                .setTargetRotation(rotation)
                 .build()
                 .also {
                     it.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
@@ -139,7 +143,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
             val imageAnalyzer = ImageAnalysis.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
+                .setTargetRotation(rotation)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()
@@ -207,7 +211,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         //Define callback
         locCallback = object : LocationCallback(){
             override fun onLocationResult(loc_result: LocationResult) {
-                Log.d(TAG, "onLocationResult fired")
+                //Log.d(TAG, "onLocationResult fired")
                 if(loc_result.locations.isEmpty()){
                     return
                 }
