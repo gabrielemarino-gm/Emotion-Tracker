@@ -159,7 +159,7 @@ class MapActivity: AppCompatActivity()
             {
                 // Chiedere di attivare il GPS
                 Toast.makeText(this, "Accendere il GPS", Toast.LENGTH_SHORT).show()
-                val intnet = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                 startActivity(intent)
             }
         }
