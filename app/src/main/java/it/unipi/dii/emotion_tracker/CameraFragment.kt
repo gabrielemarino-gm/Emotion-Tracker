@@ -82,12 +82,24 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         return fragmentCameraBinding.root
     }
 
-    override fun onResume(){
-        super.onResume()
+    override fun onStart(){
+        super.onStart()
         // create thread that will execute image processing
         cameraExecutor = Executors.newSingleThreadExecutor()
         startCamera()
     }
+
+    override fun onStop(){
+        super.onStop()
+        // Shut down our background executor
+        cameraExecutor.shutdown()
+    }
+
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
+    }
+
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
@@ -104,6 +116,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                 .also {
                     it.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
                 }
+
             val imageAnalyzer = ImageAnalysis.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setTargetRotation(fragmentCameraBinding.viewFinder.display.rotation)
@@ -112,6 +125,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                 .build()
                 .also {
                     it.setAnalyzer(cameraExecutor) { image ->
+                        Log.d("TAG", "New request")
                         if (!::bitmapBuffer.isInitialized) {
                             // The image rotation and RGB image buffer are initialized only once
                             // the analyzer has started running
@@ -148,21 +162,6 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
         }, ContextCompat.getMainExecutor(requireContext()))
     }
-
-    override fun onStop(){
-        super.onStop()
-        // Shut down our background executor
-        cameraExecutor.shutdown()
-    }
-
-    override fun onDestroyView() {
-        binding = null
-        super.onDestroyView()
-
-        // Shut down our background executor
-        cameraExecutor.shutdown()
-    }
-
     private fun detectFaces(bitmapBuffer: Bitmap, imageRotation: Int) {
 
         val inputImage = InputImage.fromBitmap(bitmapBuffer, imageRotation)
@@ -252,6 +251,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
         val locCallback=object : LocationCallback(){
             override fun onLocationResult(loc_result: LocationResult) {
+                Log.d("TAG", "Location arrived")
                 if(loc_result==null){
                     return;
                 }
@@ -277,7 +277,6 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                     myRef.push().setValue(location_cell)
 
                     position_obtained = 1
-
                 }
                 //}
             }
