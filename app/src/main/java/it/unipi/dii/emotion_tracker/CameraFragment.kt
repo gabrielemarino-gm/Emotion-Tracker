@@ -35,34 +35,43 @@ import kotlin.math.roundToInt
 
 
 class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
+    //Binding to layout objects
     private var binding: FragmentCameraBinding? = null
+    //Non null reference to binding
     private val fragmentCameraBinding
         get() = binding!!
+
+    //Thread that handles camera activity
     private lateinit var cameraExecutor: ExecutorService
-    private lateinit var model: EmotionRecognizer
+    //Reference to EmotionRecognizer class
+    private lateinit var emotionRecognizer: EmotionRecognizer
+    //Buffer to store the Bitmap of the last frame from the camera
     private lateinit var bitmapBuffer: Bitmap
-    private val detector = FaceDetection.getClient()
+    //Reference to MlKit FaceDetection
+    private val faceDetector = FaceDetection.getClient()
+
+    //Path to database
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
     private val myRef: DatabaseReference = database.getReference("position_emotion")
 
-    private var latitude: Double = 0.0
-    private var longitude: Double = 0.0
-    private var street: String? = null
-    private var city: String? = null
-
+    //Accumulators to compute aggregated happiness Index
     private var happinessAccumulator: Double = 0.0
     private var counter: Int = 0
 
+    //Reference to access Location services
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var locationRequesterStarted = false
+    //Callback to be used when a new location arrives
     private lateinit var locCallback: LocationCallback
 
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
 
-        model = EmotionRecognizer(
+        emotionRecognizer = EmotionRecognizer(
             context = requireContext(),
             resultsListener = this)
 
+        //ask for permissions
         val cameraLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { isGranted ->
@@ -94,7 +103,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
     override fun onStart(){
         super.onStart()
-        // create thread that will execute image processing
+        // create background thread that will execute image processing
         cameraExecutor = Executors.newSingleThreadExecutor()
         startCamera()
         launchLocationRequester()
@@ -102,7 +111,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
     override fun onStop(){
         super.onStop()
-        // Shut down our background executor
+        // Shut down background thread
         cameraExecutor.shutdown()
         stopLocationRequester()
     }
@@ -111,7 +120,6 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         binding = null
         super.onDestroyView()
     }
-
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
@@ -175,16 +183,13 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
     }
 
     private fun launchLocationRequester() {
-        /*
-        if (context == null){
-            return
-        }
-        */
+
+        //if permissions are not granted, location requester is not started
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
             &&
             ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
-
+            //TODO maybe we can remove this
             ActivityCompat.requestPermissions(requireActivity(),
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 MY_PERMISSIONS_REQUEST_LOCATION)
@@ -193,21 +198,25 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
-        val locRequest = LocationRequest.Builder(10000).setPriority(Priority.PRIORITY_HIGH_ACCURACY).build()
-        //locRequest.setInterval(10000)
-        //locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+        //Build properties of the location request
+        val locRequest = LocationRequest
+            .Builder(10000)
+            .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+            .build()
 
-        locCallback=object : LocationCallback(){
+        //Define callback
+        locCallback = object : LocationCallback(){
             override fun onLocationResult(loc_result: LocationResult) {
-                Log.d("TAG", "Location arrived")
-                if(loc_result==null){
+                Log.d(TAG, "onLocationResult fired")
+                if(loc_result.locations.isEmpty()){
                     return
                 }
 
+                //Get last location information
                 val location: Location = loc_result.lastLocation!!
-                latitude = location.latitude
-                longitude = location.longitude
-                Log.d("TAG", "Latitude: $latitude, Longitude: $longitude")
+                val latitude = location.latitude
+                val longitude = location.longitude
+                Log.d(TAG, "Latitude: $latitude, Longitude: $longitude")
                 if (context == null){
                     return
                 }
@@ -215,16 +224,18 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                 val addresses = geocoder.getFromLocation(latitude, longitude, 1)
                 val address = addresses?.get(0)
 
-                street = address?.thoroughfare
-                city = address?.locality
+                val street = address?.thoroughfare
+                val city = address?.locality
 
                 if(counter != 0){
+                    //Compute aggregated happiness Index and send it to the database
                     val happinessIndex = happinessAccumulator / counter
 
                     happinessAccumulator = 0.0
                     counter = 0
                     Log.d("TAG", "HappinessIndex: $happinessIndex")
-                    val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex)
+                    val timestamp = System.currentTimeMillis()
+                    val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex, timestamp)
                     myRef.push().setValue(locationCell)
                 }
             }
@@ -235,22 +246,30 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             locCallback,
             Looper.getMainLooper()
         )
+
+        locationRequesterStarted = true
+
     }
 
     private fun stopLocationRequester(){
-        fusedLocationClient.removeLocationUpdates(locCallback)
+        if (locationRequesterStarted){
+            fusedLocationClient.removeLocationUpdates(locCallback)
+        }
     }
 
     private fun detectFaces(bitmapBuffer: Bitmap, imageRotation: Int) {
 
         val inputImage = InputImage.fromBitmap(bitmapBuffer, imageRotation)
 
-        val result = detector.process(inputImage)
+        val result = faceDetector.process(inputImage)
             .addOnSuccessListener { faces ->
                 // Task completed successfully
 
                 for (face in faces){
+                    //Get the bounding box of the image
                     val boundingBox = face.boundingBox
+
+                    //Process bounding box information
                     var startingPointLeft = bitmapBuffer.width - boundingBox.bottom
                     var width = boundingBox.width()
                     if (bitmapBuffer.width - boundingBox.bottom < 0){
@@ -268,6 +287,8 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                     if (startingPointTop + boundingBox.height() > bitmapBuffer.height){
                         height = bitmapBuffer.height - startingPointTop
                     }
+
+                    //Create cropped image to get only the face
                     val faceCropImage = Bitmap.createBitmap(bitmapBuffer, startingPointLeft, startingPointTop,
                                                             width, height)
                     activity?.runOnUiThread {
@@ -275,7 +296,8 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                         tv1.setImageBitmap(faceCropImage)
                     }
 
-                    model.detect(faceCropImage, imageRotation)
+                    //Feed the deep learning model with the cropped image
+                    emotionRecognizer.detect(faceCropImage, imageRotation)
                 }
             }
             .addOnFailureListener { e ->
@@ -288,16 +310,16 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         private const val MY_PERMISSIONS_REQUEST_LOCATION = 123
     }
 
-    override fun onResults(results: Float, inferenceTime: Long, imageHeight: Int, imageWidth: Int){
+    override fun onResults(happinessValue: Float, inferenceTime: Long, imageHeight: Int, imageWidth: Int){
         // Called when the EmotionRecognizer produces results
         activity?.runOnUiThread {
             val label = fragmentCameraBinding.label
-            val roundedHappinessIndex = (results * 100.0).roundToInt() / 100.0
+            val roundedHappinessIndex = (happinessValue * 100.0).roundToInt() / 100.0
             label.text = roundedHappinessIndex.toString()
         }
 
-
-        happinessAccumulator += results
+        //Update accumulators
+        happinessAccumulator += happinessValue
         counter++
     }
 

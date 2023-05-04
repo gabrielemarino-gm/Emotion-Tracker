@@ -371,11 +371,13 @@ class LocationCell(
     longitude: Double,
     street: String?,
     city: String?,
-    emotion: Double
+    emotion: Double,
+    timestamp: Long
 ) {
     var latitude: Double = latitude
     var longitude: Double = longitude
     var street: String? = street
     var city : String? = city
     var emotion : Double = emotion
+    var timestamp: Long = timestamp
 }

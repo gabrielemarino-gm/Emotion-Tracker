@@ -23,10 +23,10 @@ class EmotionRecognizer(
     val context: Context,
     val resultsListener: ResultsListener) {
 
-        private val TAG = "EmotionRecognizer"
+    private val TAG = "EmotionRecognizer"
 
     init {
-
+        //Initialize Tensorflow lite
         TfLiteGpu.isGpuDelegateAvailable(context).onSuccessTask { gpuAvailable: Boolean ->
             val optionsBuilder =
                 TfLiteInitializationOptions.builder()
@@ -68,7 +68,7 @@ class EmotionRecognizer(
         model.close()
         inferenceTime = SystemClock.uptimeMillis() - inferenceTime
 
-        // send results
+        // send results to the listener
         resultsListener.onResults(
             results.getFloatValue(0),
             inferenceTime,
@@ -79,7 +79,7 @@ class EmotionRecognizer(
     interface ResultsListener {
         fun onError(error: String)
         fun onResults(
-            results: Float,
+            happinessValue: Float,
             inferenceTime: Long,
             imageHeight: Int,
             imageWidth: Int
