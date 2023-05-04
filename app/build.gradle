@@ -76,4 +76,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics-ktx'
 
     implementation 'com.google.mlkit:face-detection:16.1.5'
+
+    implementation 'com.github.haifengl:smile-core:2.5.0'
 }
