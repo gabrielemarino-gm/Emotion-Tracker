@@ -226,11 +226,11 @@ class LocationCell(
     longitude: Double,
     street: String?,
     city: String?,
-    emotion: String
+    emotion: Double
 ) {
         var latitude: Double = latitude
         var longitude: Double = longitude
         var street: String? = street
         var city : String? = city
-        var emotion : String = emotion
+        var emotion : Double = emotion
 }

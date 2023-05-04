@@ -224,7 +224,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                     happinessAccumulator = 0.0
                     counter = 0
                     Log.d("TAG", "HappinessIndex: $happinessIndex")
-                    val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex.toString())
+                    val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex)
                     myRef.push().setValue(locationCell)
                 }
             }
