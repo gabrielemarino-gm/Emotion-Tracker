@@ -336,6 +336,34 @@ class MapActivity: AppCompatActivity()
             }
         }
     }
+
+
+
+    private fun getActualScreenCoordinatesInterval(): DoubleArray
+    {
+        val map = findViewById<org.osmdroid.views.MapView>(R.id.map)
+
+        // Get the position of the center of the map and the current zoom scale
+        val mapCenter = map.mapCenter
+        val mapZoom = map.zoomLevelDouble
+
+        // Calculate the range of coordinates
+        val mapWidth = map.width
+        val mapHeight = map.height
+        val latSpan = mapHeight * (360.0 / (256.0 * Math.pow(2.0, mapZoom)))
+        val lngSpan = mapWidth * (360.0 / (256.0 * Math.pow(
+            2.0,
+            mapZoom
+        )) / Math.cos(Math.toRadians(mapCenter.latitude)))
+
+        val minLat = mapCenter.latitude - latSpan / 2
+        val maxLat = mapCenter.latitude + latSpan / 2
+        val minLng = mapCenter.longitude - lngSpan / 2
+        val maxLng = mapCenter.longitude + lngSpan / 2
+
+        // Return the results
+        return doubleArrayOf(minLat, maxLat, minLng, maxLng)
+    }
 }
 
 class LocationCell(
