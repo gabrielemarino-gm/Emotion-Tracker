@@ -1,5 +1,6 @@
 package it.unipi.dii.emotion_tracker
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -9,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.database.*
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.util.*
+
 
 class LoginActivity : AppCompatActivity() {
 
@@ -29,6 +32,19 @@ class LoginActivity : AppCompatActivity() {
         var login = 0
 
 
+        /*val serviceAccount = FileInputStream("app/emotion-tracker-48387-firebase-adminsdk-3yfta-4e661cccc3.json")
+
+        val options: FirebaseOptions = FirebaseOptions.Builder()
+            .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+            .setDatabaseUrl("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app")
+            .build()
+
+        FirebaseApp.initializeApp(options)*/
+
+
+        checkActiveSession() //to avoid to make login with username and password
+
+
         loginButton.setOnClickListener {
             val username = usernameEditText.text.toString()
             val password = passwordEditText.text.toString()
@@ -37,7 +53,9 @@ class LoginActivity : AppCompatActivity() {
 
             validateLogin(username, password) { loginSuccessful ->
                 if (loginSuccessful) {
-                    // If authentication succeeds, transition to the main activity
+
+                    val token = UUID.randomUUID().toString()
+                    storeTokenLocally(this,token)
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
                     finish()
@@ -54,6 +72,75 @@ class LoginActivity : AppCompatActivity() {
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
             finish()
+        }
+    }
+
+    /*private fun retrieve_userID(username: String, database: FirebaseDatabase, callback: (String) -> Unit) {
+
+        val myRef: DatabaseReference = database.getReference("users")
+
+        var user_id =""
+
+        myRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+
+                snapshot.children.forEach { child ->
+                    val childKey = child.key
+                    println("keys${childKey}")
+                    val childData = child.value as HashMap<String,String>
+
+                    val username_db=childData.get("username")
+
+
+                    if(username==username_db ){
+                        if (childKey != null) {
+                            println("keys_match${childKey}")
+                            user_id=childKey
+                            callback(childKey)
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Handle error case
+                println("error in retrieving users")
+                callback(null.toString())
+            }
+        })
+    }*/
+
+   private fun checkActiveSession() {
+
+
+        val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+        val token = prefs.getString("token", null) // retrieve the token with the user ID as a prefix
+        //val expirationTime = prefs.getLong("expirationTime", 0)
+
+        if(token!=null){
+            //the user was previously logged
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+       else{
+            println("user not logged")
+        }
+
+    }
+
+    private fun storeTokenLocally(
+        context: Context,
+        token: String
+    ) {
+        val sharedPreferences = context.getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+
+        println("storing token locally")
+
+        with(sharedPreferences.edit()) {
+            putString("token", token)
+            //putString("token_${user_id}",tokenExpirationMillis.toString())
+            apply()
         }
     }
 
