@@ -271,9 +271,20 @@ class MapActivity: AppCompatActivity()
                 {
                     task ->
                     val location: Location? = task.result
+
                     if (location == null) {
-                        Toast.makeText(this, "Posizione nulla", Toast.LENGTH_SHORT).show()
-                    } else {
+                        Toast.makeText(this, "Null Position", Toast.LENGTH_SHORT).show()
+                        val mapController = map.controller
+                        mapController.setZoom(7.5)
+                        //println("DBG: " + location.latitude.toString() + "\t\t\t" + location.latitude.toString())
+
+                        // if the location is null, the starting point of the map is the Colosseo
+                        val startPoint = GeoPoint(41.89025,12.49228)
+                        mapController.setCenter(startPoint)
+                    }
+                    else
+                    {
+
                         val mapController = map.controller
                         mapController.setZoom(15.5)
                         //println("DBG: " + location.latitude.toString() + "\t\t\t" + location.latitude.toString())

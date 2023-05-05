@@ -34,10 +34,11 @@ class MainActivity : AppCompatActivity()
         }
 
 
-        trialButton.setOnClickListener {
+        trialButton.setOnClickListener{
             val trialPage = Intent(this, TrialActivity::class.java)
             startActivity(trialPage)
         }
+
         mapButton.setOnClickListener {
             // val mapPage = Intent(this, MapActivity::class.java)
             // startActivity(mapPage)
