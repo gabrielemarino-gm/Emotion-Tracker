@@ -241,13 +241,13 @@ class MapActivity: AppCompatActivity()
         if(checkPermission())
         {
             // Check if the GPS is active
-            if (!isLocationEnabled())
-            {
-                // Ask to activate the GPS
-                Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
-                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                startActivity(intent)
-            }
+            //if (!isLocationEnabled())
+            //{
+            //    // Ask to activate the GPS
+            //    Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
+            //    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            //    startActivity(intent)
+            //}
 
             // TODO Need to be implemented
             // if (!isLocationEnabled())
@@ -266,7 +266,7 @@ class MapActivity: AppCompatActivity()
                     return
                 }
 
-                // Abbiamo finalmente accesso a latitudine e longitudine
+                // We finally have access to latitude and longitude
                 fusedLocationClient.lastLocation.addOnCompleteListener(this)
                 {
                     task ->
@@ -281,6 +281,13 @@ class MapActivity: AppCompatActivity()
                         mapController.setCenter(startPoint)
                     }
                 }
+            }
+            else
+            {
+                // Ask to activate the GPS
+                Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
             }
         }
         else

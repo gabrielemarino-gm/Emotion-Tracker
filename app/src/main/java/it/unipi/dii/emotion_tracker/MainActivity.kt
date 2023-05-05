@@ -2,8 +2,11 @@ package it.unipi.dii.emotion_tracker
 
 import android.content.Context
 import android.content.Intent
+import android.location.LocationManager
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity()
@@ -36,8 +39,21 @@ class MainActivity : AppCompatActivity()
             startActivity(trialPage)
         }
         mapButton.setOnClickListener {
-            val mapPage = Intent(this, MapActivity::class.java)
-            startActivity(mapPage)
+            // val mapPage = Intent(this, MapActivity::class.java)
+            // startActivity(mapPage)
+            if(isLocationEnabled())
+            {
+                val mapPage = Intent(this, MapActivity::class.java)
+                startActivity(mapPage)
+            }
+            else
+            {
+                // Ask to activate the GPS
+                Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
+            }
+
         }
         logoutButton.setOnClickListener{
             //remove token from sharedPreferences
@@ -50,5 +66,13 @@ class MainActivity : AppCompatActivity()
             startActivity(loginPage)
             finish()
         }
+    }
+
+    private fun isLocationEnabled(): Boolean
+    {
+        val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        // Devono essere attivi sia il GPS che la connessione a Internet
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER)
     }
 }
