@@ -240,30 +240,40 @@ class MapActivity: AppCompatActivity()
         // Controllare se l'utente ha dato il permesso per avere la localizzazione
         if(checkPermission())
         {
-            // Controllare il GPS è attivo
-            if(isLocationEnabled())
+            // Check if the GPS is active
+            if (!isLocationEnabled())
+            {
+                // Ask to activate the GPS
+                Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
+            }
+
+            // TODO Need to be implemented
+            // if (!isLocationEnabled())
+            // {
+            //     // If the user didn't activate the GPS, go in the home page or find a way to don't close the app
+            // }
+
+            if (isLocationEnabled())
             {
                 // Controllo permessi
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     &&
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                {
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                ) {
                     requestPermissions()
                     return
                 }
 
-
                 // Abbiamo finalmente accesso a latitudine e longitudine
                 fusedLocationClient.lastLocation.addOnCompleteListener(this)
                 {
-                        task ->
-                    val location: Location?= task.result
-                    if(location == null)
-                    {
+                    task ->
+                    val location: Location? = task.result
+                    if (location == null) {
                         Toast.makeText(this, "Posizione nulla", Toast.LENGTH_SHORT).show()
-                    }
-                    else
-                    {
+                    } else {
                         val mapController = map.controller
                         mapController.setZoom(15.5)
                         //println("DBG: " + location.latitude.toString() + "\t\t\t" + location.latitude.toString())
@@ -271,13 +281,6 @@ class MapActivity: AppCompatActivity()
                         mapController.setCenter(startPoint)
                     }
                 }
-            }
-            else
-            {
-                // Chiedere di attivare il GPS
-                Toast.makeText(this, "Accendere il GPS", Toast.LENGTH_SHORT).show()
-                val intnet = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                startActivity(intent)
             }
         }
         else
