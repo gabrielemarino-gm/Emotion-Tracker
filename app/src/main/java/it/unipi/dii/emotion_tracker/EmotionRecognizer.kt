@@ -21,6 +21,7 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 
 class EmotionRecognizer(
     val context: Context,
+    var initialized: Boolean = false,
     val resultsListener: ResultsListener) {
 
     private val TAG = "EmotionRecognizer"
@@ -35,6 +36,7 @@ class EmotionRecognizer(
             }
             TfLite.initialize(context, optionsBuilder.build())
         }.addOnSuccessListener {
+            initialized = true
         }.addOnFailureListener{
             resultsListener.onError("TfLiteVision failed to initialize: "
                     + it.message)
@@ -44,6 +46,10 @@ class EmotionRecognizer(
     }
 
     fun detect(image: Bitmap, imageRotation: Int) {
+        if (!initialized) {
+            Log.e(TAG, "detect: TfLiteVision is not initialized yet")
+            return
+        }
         // Inference time is the difference between the system time at the start and finish of the
         // process
         var inferenceTime = SystemClock.uptimeMillis()
