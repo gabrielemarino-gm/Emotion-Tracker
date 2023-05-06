@@ -23,4 +23,5 @@
     <string name="open_map">Open Map</string>
     <string name="emotion_tracker">Emotion Tracker</string>
     <string name="your_location">you are ...</string>
+    <string name="profile_title">%s\'s profile</string>
 </resources>
