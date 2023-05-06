@@ -1,7 +1,7 @@
 package it.unipi.dii.emotion_tracker
-
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.util.*
 
-
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var usernameEditText: EditText
@@ -20,14 +19,18 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var loginButton: Button
     private lateinit var registerButton: Button
 
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
-
-        usernameEditText = findViewById(R.id.username);
-        passwordEditText = findViewById(R.id.password);
-        loginButton = findViewById(R.id.button_login);
-        registerButton = findViewById(R.id.button_register);
+        //set the setContentView based on the phone's orientation
+        getViewBasedOnOrientation()
+       // setContentView(R.layout.activity_login)
+        usernameEditText = findViewById(R.id.username)
+        passwordEditText = findViewById(R.id.password)
+        loginButton = findViewById(R.id.button_login)
+        registerButton = findViewById(R.id.button_register)
 
         var login = 0
 
@@ -48,8 +51,6 @@ class LoginActivity : AppCompatActivity() {
         loginButton.setOnClickListener {
             val username = usernameEditText.text.toString()
             val password = passwordEditText.text.toString()
-
-
 
             validateLogin(username, password) { loginSuccessful ->
                 if (loginSuccessful) {
@@ -75,6 +76,25 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    private fun getViewBasedOnOrientation(){
+        when(getPhoneOrientation()) {
+            Configuration.ORIENTATION_PORTRAIT -> {
+                setContentView(R.layout.activity_login)
+            }
+            else -> {
+                setContentView(R.layout.activity_login_land)
+            }
+        }
+    }
+    private fun getPhoneOrientation() :Int {
+        return resources.configuration.orientation
+    }
+
+    override fun onConfigurationChanged(newOrientation: Configuration) {
+        // TODO i think, later on, I won't need this if I manage to implement orientation inside the onCreate :)
+        super.onConfigurationChanged(newOrientation)
+            getViewBasedOnOrientation()
+    }
     /*private fun retrieve_userID(username: String, database: FirebaseDatabase, callback: (String) -> Unit) {
 
         val myRef: DatabaseReference = database.getReference("users")

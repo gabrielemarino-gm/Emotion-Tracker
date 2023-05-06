@@ -13,9 +13,14 @@
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
     <string name="take_photo">Photo</string>
+    <string name="login">LOGIN</string>
+    <string name="register">REGISTER</string>
+    <string name="hint_username">username</string>
+    <string name="hint_password">password</string>
     <string name="image_description">My beautiful memory</string>
     <string name="record_video">Video</string>
     <string name="open_camera">Open Camera</string>
     <string name="open_map">Open Map</string>
     <string name="emotion_tracker">Emotion Tracker</string>
+    <string name="your_location">you are ...</string>
 </resources>
