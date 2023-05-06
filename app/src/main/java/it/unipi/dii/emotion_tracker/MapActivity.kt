@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
@@ -17,11 +18,15 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.database.*
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import smile.clustering.DBSCAN
+import java.util.*
 
 
 class MapActivity: AppCompatActivity()
@@ -55,48 +60,118 @@ class MapActivity: AppCompatActivity()
         // mapController.setCenter(startPoint)
 
         // This is useful for make an action when the user scrlol or zoom the map
-        //map.setMapListener(object: MapListener
-        //{
-        //    // Handle scroll event
-        //    override fun onScroll(event: ScrollEvent?): Boolean
-        //    {
-        //        println("SCROLL")
-        //        return true
-        //    }
-        //    override fun onZoom(event: ZoomEvent?): Boolean {
-        //        TODO("Not yet implemented")
-        //    }
-        //})
+        map.setMapListener(object: MapListener
+        {
+            // Handle scroll event
+            override fun onScroll(event: ScrollEvent?): Boolean
+            {
+                println("SCROLL")
+                keepPositionVisible(myRef,map)
+                return true
+            }
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                println("ZOOM")
+                //keepPositionVisible(myRef,map)
+                return true
+            }
+        })
 
-        print_markers(myRef, map)
+        //generateClusters(myRef, map)
     }
 
-    private fun print_markers(myRef: DatabaseReference, map: MapView)
+    private fun keepPositionVisible(myRef: DatabaseReference, map: MapView){
+
+        val currentTimeMillis = System.currentTimeMillis()
+        val twoHoursAgoMillis = currentTimeMillis - (2* 60 * 60 * 1000) //it takes two hour back from the current time
+
+        val coordinates = getActualScreenCoordinatesInterval()  //it gives a vector of four coordinates(minLat,maxLat,minLong,maxLong) which delimitate the visible screen
+        println("coordinates${coordinates[0]}-${coordinates[1]}")
+
+        val latRef=myRef.orderByChild("latitude").startAt(coordinates[0]).endAt(coordinates[1])
+
+        //val longRef=latRef.orderByChild("longitude").startAt(coordinates[2]).endAt(coordinates[3])
+
+        //val  timeRef= longRef.orderByChild("timestamp").startAt(twoHoursAgoMillis.toDouble()).endAt(currentTimeMillis.toDouble())
+
+        //val timeRefs= mutableListOf<DatabaseReference>()
+
+        latRef.addListenerForSingleValueEvent(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val timeRefs= mutableListOf<HashMap<String,Any>>()
+                val longRefList= mutableListOf<DataSnapshot>()
+                snapshot.children.forEach{child ->
+                    val childData = child.value as HashMap<String,Any>
+
+                    var longitude: Double = childData.get("longitude") as Double
+                    if(longitude>=coordinates[2] && longitude<=coordinates[3]){
+                        //so it is between the minLong and maxLong retrieved with getActualScreenCoordinatesInterval function
+                        longRefList.add(child)
+                    }
+                }
+                //here we have the data filtered by latitude and also longitude
+                val timeRefList= mutableListOf<DataSnapshot>()
+
+                for(element in longRefList){
+                    val point=element.value as HashMap<String,Any>
+                    var timeOfPoint : Long = 0
+                    if(point.get("timestamp")!=null) {
+                        timeOfPoint = point.get("timestamp") as Long
+                    }
+                    if(timeOfPoint>twoHoursAgoMillis){
+                        timeRefList.add(element)
+                    }
+                }
+                //now we have also the filter on timestamp, and the results on the timeRefList
+                //println("listaquery-----------------------------------------")
+                for (element in timeRefList){
+                    val timeRef=element.value as HashMap<String,Any>
+
+                    timeRefs.add(timeRef)
+                    //println(timeRef)
+                }
+                generateClusters(timeRefs, map)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("database error in retrieve this info")
+
+            }
+        })
+        //return timeRefs
+    }
+
+    private fun generateClusters(myRef: MutableList<HashMap<String, Any>>, map: MapView)
     {
         // Need to retrive only the point inside the screen of the user and in given time interval.
         // Retrive point and recompte clustering each time the user move the map.
-        myRef.addListenerForSingleValueEvent(
-            object : ValueEventListener
-            {
-                override fun onDataChange(snapshot: DataSnapshot)
-                {
+
+                if(myRef.isNotEmpty()) {
                     val data = mutableListOf<List<Double>>()
                     val labeledClass = mutableListOf<Double>()
 
                     // ( Loop through the results and do something with each one
-                    snapshot.children.forEach{ child ->
+                    for (childData in myRef) {
 
-                        val childData = child.value as HashMap<String, Any>
+                        //val childData = child as HashMap<String, Any>
+                        //println("elem$childData")
 
-                        data.add(listOf(childData.get("latitude") as Double, childData.get("longitude") as Double))
+                        data.add(
+                            listOf(
+                                childData.get("latitude") as Double,
+                                childData.get("longitude") as Double
+                            )
+                        )
                         labeledClass.add(((childData.get("emotion") as Double)))
 
                     }
                     // )
 
+
                     // Convert the list in array, because the class DBSCAN accept only this type
                     val dataArray = Array(data.size) { i -> data[i].toDoubleArray() }
                     val scoreArray = Array(labeledClass.size) { i -> labeledClass[i] }
+
+
 
                     // Create the DBSCAN model
                     val dbscan = DBSCAN.fit(dataArray, 7, 0.001)
@@ -107,8 +182,7 @@ class MapActivity: AppCompatActivity()
                     // (    Discover the points of each cluster.
                     val clusterPoints = mutableMapOf<Int, MutableList<List<Double>>>()
                     val scorePointCluster = mutableMapOf<Int, MutableList<List<Double>>>()
-                    for (i in dataArray.indices)
-                    {
+                    for (i in dataArray.indices) {
                         val label = labels[i]
                         val point = dataArray[i].toList()
                         val score = scoreArray[i]
@@ -118,24 +192,25 @@ class MapActivity: AppCompatActivity()
                     }
                     // )
 
+                    val clusterList = mutableListOf<ClusterCentroid>()
 
                     // Find the centroid: the means of all the points inside a single cluster
-                    for (i in clusterPoints.keys)
-                    {
+                    for (i in clusterPoints.keys) {
                         // println("DBG: Cluster $i: $clusterPoints[i]")
                         var lat: Double = 0.0
                         var lon: Double = 0.0
                         var sco: Double = 0.0
+                        var numberOfPointsInCluster = 0
 
-                        for(point in clusterPoints[i]!!)
-                        {
+                        for (point in clusterPoints[i]!!) {
                             lat = lat + point[0]
                             lon = lon + point[1]
+
+                            numberOfPointsInCluster++  //count the number of points in the cluster
                         }
 
                         var scoreIndx: Int = 0
-                        while(scoreIndx < scorePointCluster[i]!!.size)
-                        {
+                        while (scoreIndx < scorePointCluster[i]!!.size) {
                             // println("DBG : scorePointCluster[i]!![scoreIndx] = ${scorePointCluster[i]!![scoreIndx]}")
                             sco = sco + scorePointCluster[i]!![scoreIndx][0]
                             scoreIndx++
@@ -147,93 +222,74 @@ class MapActivity: AppCompatActivity()
                         //    println("DBG: $score")
                         //}
 
-                        lat = lat/ clusterPoints[i]?.size!!
-                        lon = lon/clusterPoints[i]?.size!!
-                        sco = sco/scorePointCluster[i]?.size!!
+                        lat = lat / clusterPoints[i]?.size!!
+                        lon = lon / clusterPoints[i]?.size!!
+                        sco = sco / scorePointCluster[i]?.size!!
+
+                        val geocoder = Geocoder(applicationContext, Locale.getDefault())
+                        val addresses = geocoder.getFromLocation(lat, lon, 1)
+                        val address = addresses?.get(0)
+
+                        val street = address?.thoroughfare
+                        val city = address?.locality
 
                         // val currentCluster =  ClusterInfo(sco, lat, lon)
                         // clusters = clusters.plus(currentCluster)
 
-                        // println("DBG: Cluster $i: $lat, $lon, score = $sco")
+                        //println("DBG: Cluster $i: $lat, $lon, score = $sco")
 
+                        val timestamp = System.currentTimeMillis()
 
-                        // I found the centroid of the cluster, I can print the mark
-                        var marker = Marker(map)
-                        marker.position = GeoPoint(lat, lon)
-                        marker.title = "Latitude:${lat}\n" +
-                                "Longitude:${lon}\n" +
-                                "Mean Emotion:${sco}"
+                        val cluster = ClusterCentroid(
+                            lat,
+                            lon,
+                            street,
+                            city,
+                            sco,
+                            numberOfPointsInCluster,
+                            Date(timestamp)
+                        )
+                        clusterList.add(cluster)
 
-                        if(sco > 0.50)
-                        {
-                            val icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
-                            marker.icon = BitmapDrawable(resources, icon)
-
-                        }
-                        else
-                        {
-                            val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_red_face)
-                            marker.icon = BitmapDrawable(resources, icon)
-                        }
-                        map.overlays.add(marker)
 
                     }
+                    print_markers(clusterList, map)
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-                    // Handle error case
-                    println("error in retrieving position")
-                }
-            }
-        )
     }
 
-//    private fun print_markers(myRef: DatabaseReference, map: MapView) {
-//
-//        myRef.addListenerForSingleValueEvent(object : ValueEventListener{
-//            override fun onDataChange(snapshot: DataSnapshot) {
-//                // Loop through the results and do something with each one
-//                snapshot.children.forEach { child ->
-//                    val childData = child.value as HashMap<String,Any>
-//                    //println(childData!!::class.simpleName)
-//                    //println(childData)
-//                    //var childD=HashMap<String, Int>()
-//                    //childD= childData as HashMap<String, Int>
-//                    //println(childData.get("latitude"))
-//                    //val jsonData= Json.decodeFromString<LocationCell>(childData.toString())
-//                    var latitude: Double = childData.get("latitude") as Double
-//                    var longitude: Double = childData.get("longitude") as Double
-//                    val marker = Marker(map)
-//                    marker.position = GeoPoint(latitude, longitude)
-//                    marker.title = "lat:${childData.get("latitude")}\n" +
-//                            "long:${childData.get("longitude")}\n" +
-//                            "street:${childData.get("street")}\n" +
-//                            "city:${childData.get("city")}\n" +
-//                            "emotion:${childData.get("emotion")}"
-//
-//                    val emotion_level = childData.get("emotion").toString()
-//                    //println(emotion_level.toDouble())
-//                    if(emotion_level.toDouble() >0.50){
-//                        //println("maggiore di 0.50")
-//                        val icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
-//                        marker.icon = BitmapDrawable(resources, icon)
-//
-//                    }
-//                    else{
-//                        //println("minore di 0.50")
-//                        val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_red_face)
-//                        marker.icon = BitmapDrawable(resources, icon)
-//                    }
-//                    map.overlays.add(marker)
-//                }
-//            }
-//
-//            override fun onCancelled(error: DatabaseError) {
-//                // Handle error case
-//                println("error in retrieving position")
-//            }
-//        })
-//    }
+   private fun print_markers(clusterList: MutableList<ClusterCentroid>, map: MapView) {
+
+            for(cluster in clusterList) {
+
+                var latitude: Double = cluster.latitude
+                var longitude: Double = cluster.longitude
+
+                println("DBG: Cluster $latitude -- $longitude")
+                val marker = Marker(map)
+                marker.position = GeoPoint(latitude, longitude)
+                marker.title = "lat:${cluster.latitude}\n" +
+                        "long:${cluster.longitude}\n" +
+                        "street:${cluster.street}\n" +
+                        "city:${cluster.city}\n" +
+                        "emotion:${cluster.emotion}\n" +
+                        "date:${cluster.date}\n" +
+                        "numberPoints:${cluster.numberOfPoints}"
+
+                val emotion_level = cluster.emotion
+                //println(emotion_level.toDouble())
+                if (emotion_level > 0.50) {
+                    //println("maggiore di 0.50")
+                    val icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
+                    marker.icon = BitmapDrawable(resources, icon)
+
+                } else {
+                    //println("minore di 0.50")
+                    val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_red_face)
+                    marker.icon = BitmapDrawable(resources, icon)
+                }
+                map.overlays.add(marker)
+            }
+    }
 
     private fun setStartPosition(map: MapView)
     {
@@ -402,3 +458,13 @@ class LocationCell(
     var emotion : Double = emotion
     var timestamp: Long = timestamp
 }
+
+class ClusterCentroid(
+    var latitude: Double,
+    var longitude: Double,
+    var street: String?,
+    var city: String?,
+    var emotion: Double,
+    var numberOfPoints: Int,
+    var date: Date
+){}
