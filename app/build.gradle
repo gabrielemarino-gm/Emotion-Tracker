@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace 'it.unipi.dii.emotion_tracker'
-    compileSdk 33
+    //compileSdk 33
+    compileSdkPreview "UpsideDownCake"
 
     defaultConfig {
         applicationId "it.unipi.dii.emotion_tracker"
@@ -41,6 +42,7 @@ android {
 
 dependencies {
     implementation 'com.google.firebase:firebase-database-ktx:20.0.4'
+    implementation 'androidx.core:core-ktx:+'
     def camerax_version = "1.1.0-beta01"
     def fragment_version = "1.5.7"
 
