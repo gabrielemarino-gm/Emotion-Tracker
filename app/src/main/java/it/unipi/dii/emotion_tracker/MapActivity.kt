@@ -125,13 +125,13 @@ class MapActivity: AppCompatActivity()
         if(checkPermission())
         {
             // Check if the GPS is active
-            if (!isLocationEnabled())
-            {
-                // Ask to activate the GPS
-                Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
-                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                startActivity(intent)
-            }
+            //if (!isLocationEnabled())
+            //{
+            //    // Ask to activate the GPS
+            //    Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
+            //    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            //    startActivity(intent)
+            //}
 
             // TODO Need to be implemented
             // if (!isLocationEnabled())
@@ -150,14 +150,25 @@ class MapActivity: AppCompatActivity()
                     return
                 }
 
-                // Abbiamo finalmente accesso a latitudine e longitudine
+                // We finally have access to latitude and longitude
                 fusedLocationClient.lastLocation.addOnCompleteListener(this)
                 {
                     task ->
                     val location: Location? = task.result
+
                     if (location == null) {
-                        Toast.makeText(this, "Posizione nulla", Toast.LENGTH_SHORT).show()
-                    } else {
+                        Toast.makeText(this, "Null Position", Toast.LENGTH_SHORT).show()
+                        val mapController = map.controller
+                        mapController.setZoom(7.5)
+                        //println("DBG: " + location.latitude.toString() + "\t\t\t" + location.latitude.toString())
+
+                        // if the location is null, the starting point of the map is the Colosseo
+                        val startPoint = GeoPoint(41.89025,12.49228)
+                        mapController.setCenter(startPoint)
+                    }
+                    else
+                    {
+
                         val mapController = map.controller
                         mapController.setZoom(15.5)
                         //println("DBG: " + location.latitude.toString() + "\t\t\t" + location.latitude.toString())
@@ -165,6 +176,13 @@ class MapActivity: AppCompatActivity()
                         mapController.setCenter(startPoint)
                     }
                 }
+            }
+            else
+            {
+                // Ask to activate the GPS
+                Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
             }
         }
         else
