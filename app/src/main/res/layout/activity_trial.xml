@@ -23,12 +23,104 @@
         app:layout_constraintVertical_bias="0.022" />
 
     <TextView
+        android:id="@+id/profile_information"
+        android:layout_width="201dp"
+        android:layout_height="47dp"
+        android:fontFamily="cursive"
+        android:gravity="center"
+        android:text="@string/information_title"
+        android:textColor="#651FFF"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/happiness_index"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.514"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title"
+        app:layout_constraintVertical_bias="0.122" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="107dp"
+        android:layout_height="59dp"
+        android:text="@string/change_password"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toTopOf="@+id/happiness_index"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.505"
+        app:layout_constraintStart_toStartOf="@+id/guideline4"
+        app:layout_constraintTop_toBottomOf="@+id/profile_information"
+        app:layout_constraintVertical_bias="0.392" />
+
+    <TextView
+        android:id="@+id/username_profile"
+        android:layout_width="180dp"
+        android:layout_height="26dp"
+        android:text="@string/profile_username"
+        app:layout_constraintBottom_toTopOf="@+id/birthday_profile"
+        app:layout_constraintEnd_toStartOf="@+id/guideline4"
+        app:layout_constraintHorizontal_bias="0.525"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/profile_information"
+        app:layout_constraintVertical_bias="0.523" />
+
+    <TextView
+        android:id="@+id/birthday_profile"
+        android:layout_width="180dp"
+        android:layout_height="27dp"
+        android:layout_marginBottom="12dp"
+        android:text="@string/profile_birthday"
+        app:layout_constraintBottom_toTopOf="@+id/happiness_index"
+        app:layout_constraintEnd_toStartOf="@+id/guideline4"
+        app:layout_constraintHorizontal_bias="0.525"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/happiness_index"
+        android:layout_width="199dp"
+        android:layout_height="43dp"
+        android:fontFamily="cursive"
+        android:gravity="center"
+        android:text="@string/happiness_index_title"
+        android:textColor="#651FFF"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/last_locations"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title"
+        app:layout_constraintVertical_bias="0.621" />
+
+    <TextView
+        android:id="@+id/happiness_index_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/happiness_index_value"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/last_locations"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.383"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/happiness_index"
+        app:layout_constraintVertical_bias="0.547" />
+
+    <ImageView
+        android:id="@+id/happiness_face"
+        android:layout_width="75dp"
+        android:layout_height="77dp"
+        app:layout_constraintBottom_toTopOf="@+id/last_locations"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/happiness_index_value"
+        app:layout_constraintTop_toBottomOf="@+id/happiness_index" />
+
+    <TextView
         android:id="@+id/last_locations"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="cursive"
         android:gravity="center"
-        android:text="Your last locations"
+        android:text="@string/locations_title"
         android:textColor="#651FFF"
         android:textSize="24sp"
         android:textStyle="bold"
@@ -38,8 +130,8 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/location_list"
-        android:layout_width="394dp"
-        android:layout_height="128dp"
+        android:layout_width="349dp"
+        android:layout_height="165dp"
         android:scrollbarAlwaysDrawHorizontalTrack="false"
         android:scrollbarAlwaysDrawVerticalTrack="false"
         android:scrollbarSize="4dp"
@@ -57,5 +149,12 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         tools:layout="@layout/fragment_camera" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="205dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -24,4 +24,12 @@
     <string name="emotion_tracker">Emotion Tracker</string>
     <string name="your_location">you are ...</string>
     <string name="profile_title">%s\'s profile</string>
+    <string name="last_location_item">%s, %s, %s</string>
+    <string name="happiness_index_title">your happiness index</string>
+    <string name="happiness_index_value">%s</string>
+    <string name="information_title">your information</string>
+    <string name="locations_title">your last locations</string>
+    <string name="change_password">change password</string>
+    <string name="profile_username">username: %s</string>
+    <string name="profile_birthday">birthday: %s</string>
 </resources>
