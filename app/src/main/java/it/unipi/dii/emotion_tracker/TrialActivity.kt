@@ -1,26 +1,28 @@
 package it.unipi.dii.emotion_tracker
 
 
-import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.marginBottom
+import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import java.text.DateFormat
 import java.text.DateFormat.getDateInstance
-import java.text.SimpleDateFormat
 import java.util.Date
 
 class TrialActivity : AppCompatActivity() {
+    private lateinit var changePasswordButton: Button
     private lateinit var username: String
     private var dateOfBirth: String = ""
     private var happinessIndex: Double = 0.0
@@ -30,17 +32,26 @@ class TrialActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_trial)
 
-        inflateProfile()
-
-
-    }
-
-    private fun inflateProfile(){
         //val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
         //username = prefs.getString("username", null) // retrieve the token with the user ID as a prefix
 
         username = "fabio"
 
+        inflateProfile()
+
+        changePasswordButton = findViewById(R.id.change_password_button)
+        changePasswordButton.setOnClickListener(){
+            val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
+            val changePasswordFragment = ChangePasswordFragment(this, username)
+            transaction.add(R.id.change_password_container, changePasswordFragment, "change_password")
+            transaction.addToBackStack(null)
+            transaction.setReorderingAllowed(true)
+            transaction.commit()
+            changePasswordButton.visibility = INVISIBLE
+        }
+    }
+
+    private fun inflateProfile(){
         val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef: DatabaseReference = database.getReference("users")
 
@@ -61,7 +72,7 @@ class TrialActivity : AppCompatActivity() {
                 }
             }
             .addOnFailureListener { exception ->
-                Log.e("ciao", "Error getting documents: ", exception)
+                Log.e("Profile", "Error getting documents: ", exception)
             }
 
 
@@ -101,6 +112,10 @@ class TrialActivity : AppCompatActivity() {
             happinessIndex >= 0.75 -> imageHappinessPath = R.drawable.happy_level4
         }
         findViewById<ImageView>(R.id.happiness_face).setImageResource(imageHappinessPath)
+    }
+
+    fun resetButton() {
+        changePasswordButton.visibility = VISIBLE
     }
 }
 

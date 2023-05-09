@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.AspectRatio
@@ -95,6 +96,8 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Wanted behaviour is that keyboard popup will overlap the fragment
+        activity?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
         //bind layout to Kotlin objects
         binding = FragmentCameraBinding.inflate(inflater)
         return fragmentCameraBinding.root
