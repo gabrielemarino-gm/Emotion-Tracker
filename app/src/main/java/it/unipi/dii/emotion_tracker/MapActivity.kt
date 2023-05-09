@@ -1,9 +1,13 @@
 package it.unipi.dii.emotion_tracker
 
 import android.Manifest
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.location.Geocoder
@@ -11,8 +15,11 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -28,17 +35,25 @@ import org.osmdroid.views.overlay.Marker
 import smile.clustering.DBSCAN
 import java.util.*
 
-
+private lateinit var listCluster: MutableList<ClusterCentroid>
 class MapActivity: AppCompatActivity()
 {
+
     private val MY_PERMISSIONS_REQUEST_LOCATION = 123
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var buttonClicked : Boolean = false
+
+    init {
+        listCluster= mutableListOf<ClusterCentroid>()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
         //FirebaseApp.initializeApp(this);
         setContentView(R.layout.activity_map)
+
+        set_fragment_ranking()
 
         Configuration.getInstance().userAgentValue = "it.unipi.dii.emotion_tracker"
 
@@ -77,6 +92,65 @@ class MapActivity: AppCompatActivity()
         })
 
         //generateClusters(myRef, map)
+    }
+
+    private fun set_fragment_ranking() {
+
+        val button = findViewById<Button>(R.id.ranking_button)
+        val fragment_ranking=RankingFragment()
+        val parentLayout=findViewById<ConstraintLayout>(R.id.map_page)
+        val params=ConstraintLayout.LayoutParams((parentLayout.width * 0.8).toInt(), //width 80% of parent and height the same
+            ConstraintLayout.LayoutParams.MATCH_PARENT)
+        findViewById<FrameLayout>(R.id.fragment_ranking).layoutParams = params
+
+        button.setOnClickListener {
+            val screenWidth = Resources.getSystem().displayMetrics.widthPixels
+
+            val anim = ObjectAnimator.ofFloat(button, "x", button.x, screenWidth*0.8.toFloat())
+
+            if(!buttonClicked) {
+
+                buttonClicked=true
+
+                println("fragment appear")
+                anim.addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+
+
+                            val fragment = RankingFragment()
+                            supportFragmentManager.beginTransaction()
+                                .replace(R.id.fragment_ranking, fragment)
+                                .commit()
+
+                    }
+                })
+                // Start the animation
+                anim.start()
+            } else {
+                println("fragment disappear")
+                buttonClicked=false
+                val anim = ObjectAnimator.ofFloat(button, "x", button.x, 0f)
+                //val animFragment = ObjectAnimator.ofFloat(fragment_ranking.view, "x", button.x, 0f)
+                //val animSet = AnimatorSet()
+                //animSet.playTogether(anim, animFragment)
+
+                anim.addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+
+
+                        val fragment = supportFragmentManager.findFragmentById(R.id.fragment_ranking)
+                        fragment?.let {
+                            supportFragmentManager.beginTransaction().remove(it).commit()
+                        }
+
+                    }
+                })
+
+                anim.start()
+            }
+
+
+        }
     }
 
     private fun keepPositionVisible(myRef: DatabaseReference, map: MapView){
@@ -251,8 +325,8 @@ class MapActivity: AppCompatActivity()
                         )
                         clusterList.add(cluster)
 
-
                     }
+                    listCluster=clusterList
                     print_markers(clusterList, map)
                 }
     }
@@ -440,6 +514,11 @@ class MapActivity: AppCompatActivity()
 
         // Return the results
         return doubleArrayOf(minLat, maxLat, minLng, maxLng)
+    }
+
+    fun getData(): Any {
+
+        return listCluster
     }
 }
 
