@@ -183,7 +183,7 @@ class MapActivity: AppCompatActivity()
                     }
                 }
                 //here we have the data filtered by latitude and also longitude
-                val timeRefList= mutableListOf<DataSnapshot>()
+                /*val timeRefList= mutableListOf<DataSnapshot>()
 
                 for(element in longRefList){
                     val point=element.value as HashMap<String,Any>
@@ -194,10 +194,10 @@ class MapActivity: AppCompatActivity()
                     if(timeOfPoint>twoHoursAgoMillis){
                         timeRefList.add(element)
                     }
-                }
+                }*/
                 //now we have also the filter on timestamp, and the results on the timeRefList
                 //println("listaquery-----------------------------------------")
-                for (element in timeRefList){
+                for (element in longRefList){
                     val timeRef=element.value as HashMap<String,Any>
 
                     timeRefs.add(timeRef)
@@ -518,7 +518,7 @@ class MapActivity: AppCompatActivity()
 
     fun getData(): Any {
 
-        return listCluster
+        return listCluster.sortedByDescending { it.emotion }
     }
 }
 
