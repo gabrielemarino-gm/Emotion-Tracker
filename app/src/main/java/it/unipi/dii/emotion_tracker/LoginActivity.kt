@@ -1,4 +1,5 @@
 package it.unipi.dii.emotion_tracker
+
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -19,44 +20,35 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var loginButton: Button
     private lateinit var registerButton: Button
 
-
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //set the setContentView based on the phone's orientation
-        getViewBasedOnOrientation()
-       // setContentView(R.layout.activity_login)
-        usernameEditText = findViewById(R.id.username)
+        //getViewBasedOnOrientation()
+        setContentView(R.layout.activity_login)
+        usernameEditText = findViewById(R.id.username_login)
         passwordEditText = findViewById(R.id.password)
-        loginButton = findViewById(R.id.button_login)
-        registerButton = findViewById(R.id.button_register)
+        loginButton = findViewById(R.id.button_login_l)
+        registerButton = findViewById(R.id.button_register_l)
 
         var login = 0
 
+// TODO saved state of the UI elements.
+        // Restore the state of the UI elements if savedInstanceState is not null
+        if (savedInstanceState != null) {
+            val username = savedInstanceState.getString("USERNAME")
+            usernameEditText.setText(username)
 
-        /*val serviceAccount = FileInputStream("app/emotion-tracker-48387-firebase-adminsdk-3yfta-4e661cccc3.json")
-
-        val options: FirebaseOptions = FirebaseOptions.Builder()
-            .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-            .setDatabaseUrl("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app")
-            .build()
-
-        FirebaseApp.initializeApp(options)*/
-
-
+            val password = savedInstanceState.getString("PASSWORD")
+            passwordEditText.setText(password)
+        }
         checkActiveSession() //to avoid to make login with username and password
-
-
         loginButton.setOnClickListener {
-            val username = usernameEditText.text.toString()
-            val password = passwordEditText.text.toString()
-
+            val username = usernameEditText.text.toString().trim()
+            val password = passwordEditText.text.toString().trim()
             validateLogin(username, password) { loginSuccessful ->
                 if (loginSuccessful) {
-
                     val token = UUID.randomUUID().toString()
-                    storeTokenLocally(this,token)
+                    storeTokenLocally(this, token)
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
                     finish()
@@ -69,32 +61,50 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        registerButton.setOnClickListener(){
+        registerButton.setOnClickListener() {
             val intent = Intent(this, RegisterActivity::class.java)
+            //  val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
             finish()
         }
     }
 
-    private fun getViewBasedOnOrientation(){
-        when(getPhoneOrientation()) {
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Save the state of the UI elements into the bundle
+        outState.putString("USERNAME", usernameEditText.text.toString())
+        outState.putString("PASSWORD", passwordEditText.text.toString())
+    }
+
+    private fun getViewBasedOnOrientation() {
+        when (getPhoneOrientation()) {
             Configuration.ORIENTATION_PORTRAIT -> {
                 setContentView(R.layout.activity_login)
             }
-            else -> {
-                setContentView(R.layout.activity_login_land)
+
+            Configuration.ORIENTATION_LANDSCAPE -> {
+                setContentView(R.layout.activity_login)
             }
         }
     }
-    private fun getPhoneOrientation() :Int {
+
+    private fun getPhoneOrientation(): Int {
         return resources.configuration.orientation
     }
+    /*
 
-    override fun onConfigurationChanged(newOrientation: Configuration) {
-        // TODO i think, later on, I won't need this if I manage to implement orientation inside the onCreate :)
-        super.onConfigurationChanged(newOrientation)
-            getViewBasedOnOrientation()
-    }
+        override fun onConfigurationChanged(newConfig: Configuration) {
+        //TODO ....
+            super.onConfigurationChanged(newConfig)
+            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                setContentView(R.layout.activity_login)
+            } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+                setContentView(R.layout.activity_login)
+            }
+        }
+        */
+
+
     /*private fun retrieve_userID(username: String, database: FirebaseDatabase, callback: (String) -> Unit) {
 
         val myRef: DatabaseReference = database.getReference("users")
@@ -130,20 +140,20 @@ class LoginActivity : AppCompatActivity() {
         })
     }*/
 
-   private fun checkActiveSession() {
+    private fun checkActiveSession() {
 
 
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
-        val token = prefs.getString("token", null) // retrieve the token with the user ID as a prefix
+        val token =
+            prefs.getString("token", null) // retrieve the token with the user ID as a prefix
         //val expirationTime = prefs.getLong("expirationTime", 0)
 
-        if(token!=null){
+        if (token != null) {
             //the user was previously logged
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
-        }
-       else{
+        } else {
             println("user not logged")
         }
 
@@ -153,7 +163,8 @@ class LoginActivity : AppCompatActivity() {
         context: Context,
         token: String
     ) {
-        val sharedPreferences = context.getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+        val sharedPreferences =
+            context.getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
 
         println("storing token locally")
 
@@ -165,7 +176,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun validateLogin(username: String, password: String, callback: (Boolean) -> Unit) {
-        val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
+        val database: FirebaseDatabase =
+            FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef: DatabaseReference = database.getReference("users")
 
         myRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -173,13 +185,18 @@ class LoginActivity : AppCompatActivity() {
 
                 var userExists = false
                 snapshot.children.forEach { child ->
-                    val childData = child.value as HashMap<String,String>
+                    val childData = child.value as HashMap<String, String>
 
-                    val username_db=childData.get("username")
-                    val password_db=childData.get("password")
+                    val username_db = childData.get("username")
+                    val password_db = childData.get("password")
 
 
-                    if(username==username_db && password_db?.let { isPasswordMatch(password, it) } == true){
+                    if (username == username_db && password_db?.let {
+                            isPasswordMatch(
+                                password,
+                                it
+                            )
+                        } == true) {
                         userExists = true
                     }
                 }
