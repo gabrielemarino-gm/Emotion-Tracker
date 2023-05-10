@@ -331,14 +331,16 @@ class MapActivity: AppCompatActivity()
                 }
     }
 
-   private fun print_markers(clusterList: MutableList<ClusterCentroid>, map: MapView) {
-
-            for(cluster in clusterList) {
-
+    private fun print_markers(clusterList: MutableList<ClusterCentroid>, map: MapView)
+    {
+        try
+        {
+            for(cluster in clusterList)
+            {
                 var latitude: Double = cluster.latitude
                 var longitude: Double = cluster.longitude
 
-                println("DBG: Cluster $latitude -- $longitude")
+                //println("DBG: Cluster $latitude -- $longitude")
                 val marker = Marker(map)
                 marker.position = GeoPoint(latitude, longitude)
                 marker.title = "lat:${cluster.latitude}\n" +
@@ -351,18 +353,28 @@ class MapActivity: AppCompatActivity()
 
                 val emotion_level = cluster.emotion
                 //println(emotion_level.toDouble())
-                if (emotion_level > 0.50) {
+                if (emotion_level > 0.50)
+                {
                     //println("maggiore di 0.50")
                     val icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
                     marker.icon = BitmapDrawable(resources, icon)
 
-                } else {
+                }
+                else
+                {
                     //println("minore di 0.50")
                     val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_red_face)
                     marker.icon = BitmapDrawable(resources, icon)
                 }
+
                 map.overlays.add(marker)
             }
+        }
+        catch (e: java.lang.Exception)
+        {
+            println("ERR: " + e.message)
+            return
+        }
     }
 
     private fun setStartPosition(map: MapView)
