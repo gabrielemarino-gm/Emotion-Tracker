@@ -8,12 +8,13 @@
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
-
+    <string name ="logout">LOGOUT</string>
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
     <string name="take_photo">Photo</string>
     <string name="login">LOGIN</string>
+    <string name="back">BACK</string>
     <string name="register">REGISTER</string>
     <string name="hint_username">username</string>
     <string name="hint_password">password</string>
@@ -28,8 +29,11 @@
     <string name="happiness_index_title">your happiness index</string>
     <string name="happiness_index_value">%s</string>
     <string name="information_title">your information</string>
-    <string name="locations_title">your last locations</string>
+    <string name="locations_title">your latest locations</string>
     <string name="change_password">change password</string>
     <string name="profile_username">username: %s</string>
     <string name="profile_birthday">birthday: %s</string>
+    <string name="old_password">Enter old password</string>
+    <string name="new_password">Enter new password</string>
+    <string name="change">CHANGE</string>
 </resources>

@@ -15,9 +15,9 @@ class MainActivity : AppCompatActivity()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val trialButton = findViewById<Button>(R.id.btn_trial)
+        val trialButton = findViewById<Button>(R.id.btn_toCamera)
         val mapButton = findViewById<Button>(R.id.btn_toMap)
-        val logoutButton =findViewById<Button>(R.id.logout)
+        val logoutButton =findViewById<Button>(R.id.btn_logout)
 
         //necessary to know if the user is logged in, if he makes logout and then presses the button back he would enter in this page (not correct behaviour)
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
