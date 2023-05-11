@@ -20,6 +20,7 @@ import com.google.firebase.database.*
 import java.text.DateFormat
 import java.text.DateFormat.getDateInstance
 import java.util.Date
+import kotlin.math.roundToInt
 
 class TrialActivity : AppCompatActivity() {
     private lateinit var changePasswordButton: Button
@@ -86,7 +87,6 @@ class TrialActivity : AppCompatActivity() {
                 val happinessMean=sommaHappiness/count
 
                 //now we want to obtain the 5 latest location
-
                 posUserList= posUserList.take(5) as MutableList<LocationCell>
 
                 val timestampLast= mutableListOf<Long>()
@@ -105,6 +105,34 @@ class TrialActivity : AppCompatActivity() {
                     Location(posUserList[3].street, posUserList[3].city, dateLast[3]),
                     Location(posUserList[4].street, posUserList[4].city, dateLast[4])
                 )
+                /*
+                var posList= mutableListOf<LocationCell>()
+                posList.add(posUserList[0])
+                var numElements = 1
+                var i = 1
+                while(i <= posUserList.size && numElements < 5){
+                    var nextLocation = posUserList.get(i)
+                    if (nextLocation.city.equals(posList.last().city) &&
+                        nextLocation.street.equals(posList.last().street)){
+                        i++
+                        continue
+                    }
+                    else{
+                        i++
+                        posList.add(nextLocation)
+                        numElements++
+                    }
+                }
+
+                val listToReturn : ArrayList<Location> = ArrayList(numElements)
+
+                for (j in 0 until numElements){
+                    val date = Date(posUserList[j].timestamp) // create a new Date object from the timestamp
+                    val format = getDateInstance(DateFormat.DEFAULT) // create a date format
+                    val dateString = format.format(date) // format the date as a string
+                    listToReturn.add(Location(posList[j].street, posList[j].city, dateString))
+                }
+                */
 
                 inflateProfile(happinessMean,posList)
 
@@ -144,7 +172,7 @@ class TrialActivity : AppCompatActivity() {
 
         //compute happinessIndex and lastLocations
 
-        happinessIndex=happinessMean
+        happinessIndex=(happinessMean * 100.0).roundToInt() / 100.0
         lastLocations=posList
 
         val recyclerView = findViewById<RecyclerView>(R.id.location_list)
