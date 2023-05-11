@@ -535,19 +535,14 @@ class MapActivity: AppCompatActivity()
 }
 
 class LocationCell(
-    latitude: Double,
-    longitude: Double,
-    street: String?,
-    city: String?,
-    emotion: Double,
-    timestamp: Long
+    var latitude: Double,
+    var longitude: Double,
+    var street: String?,
+    var city: String?,
+    var emotion: Double,
+    var timestamp: Long,
+    var username: String
 ) {
-    var latitude: Double = latitude
-    var longitude: Double = longitude
-    var street: String? = street
-    var city : String? = city
-    var emotion : Double = emotion
-    var timestamp: Long = timestamp
 }
 
 class ClusterCentroid(

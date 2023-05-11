@@ -14,7 +14,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.AspectRatio
@@ -255,10 +254,10 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                     Log.d("TAG", "HappinessIndex: $happinessIndex")
                     val timestamp = System.currentTimeMillis()
                     //TODO add username
-                    //val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex, timestamp, username)
-                    //myRef.push().setValue(locationCell)
-                    val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex, timestamp)
+                    val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex, timestamp, username)
                     myRef.push().setValue(locationCell)
+                    //val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex, timestamp)
+                    //myRef.push().setValue(locationCell)
                 }
                 else if(firstCall){
                     firstCall = false
