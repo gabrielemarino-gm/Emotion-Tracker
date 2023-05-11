@@ -5,36 +5,101 @@ import android.content.Intent
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
+import android.view.MenuItem
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.navigation.NavigationView
 
 class MainActivity : AppCompatActivity()
 {
-    override fun onCreate(savedInstanceState: Bundle?) {
+    lateinit var toggle: ActionBarDrawerToggle
+
+    override fun onCreate(savedInstanceState: Bundle?)
+    {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val trialButton = findViewById<Button>(R.id.btn_toCamera)
-        val mapButton = findViewById<Button>(R.id.btn_toMap)
-        val logoutButton =findViewById<Button>(R.id.btn_logout)
+        // val trialButton = findViewById<Button>(R.id.btn_toCamera)
+        // val mapButton = findViewById<Button>(R.id.btn_toMap)
+        // val logoutButton =findViewById<Button>(R.id.btn_logout)
 
         //necessary to know if the user is logged in, if he makes logout and then presses the button back he would enter in this page (not correct behaviour)
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
         val token = prefs.getString("token", null)
 
-        if(token==null){
-            //the user is not logged
+        if(token == null)
+        {
+            // the user is not logged
             val loginPage = Intent(this, LoginActivity::class.java)
             startActivity(loginPage)
             finish()
         }
-        else{
+        else
+        {
+            // Need to retrieve the user name
+            // TODO(To be Implement)
             println("user logged")
         }
 
+        val drawerLayout: DrawerLayout = findViewById(R.id.drawerLayout)
+        val navView: NavigationView = findViewById(R.id.nav_view)
 
-        trialButton.setOnClickListener{
+        toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
+
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        navView.setNavigationItemSelectedListener {
+            when(it.itemId)
+            {
+                // On Click over the menu's Home Button
+                R.id.nav_home -> Toast.makeText(applicationContext,"Already in Home", Toast.LENGTH_SHORT).show()
+
+                // On Click over the menu's Map Button
+                R.id.nav_map -> {
+                    if(isLocationEnabled())
+                    {
+                        val mapPage = Intent(this, MapActivity::class.java)
+                        startActivity(mapPage)
+                    }
+                    else
+                    {
+                        // Ask to activate the GPS
+                        Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                        startActivity(intent)
+                    }
+                }
+
+                // On Click over the menu's Account Button
+                R.id.nav_account -> {
+                    val trialPage = Intent(this, TrialActivity::class.java)
+                    startActivity(trialPage)
+                }
+
+                // On Click over the menu's Logout Button
+                R.id.nav_logout -> {
+                    //remove token from sharedPreferences
+                    val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+                    val editor = prefs.edit()
+                    editor.remove("token")
+                    editor.apply()
+
+                    val loginPage = Intent(this, LoginActivity::class.java)
+                    startActivity(loginPage)
+                    finish()
+                }
+            }
+            true
+        }
+
+        /*trialButton.setOnClickListener{
             val trialPage = Intent(this, TrialActivity::class.java)
             startActivity(trialPage)
         }
@@ -66,7 +131,7 @@ class MainActivity : AppCompatActivity()
             val loginPage = Intent(this, LoginActivity::class.java)
             startActivity(loginPage)
             finish()
-        }
+        }*/
     }
 
     private fun isLocationEnabled(): Boolean
@@ -75,5 +140,14 @@ class MainActivity : AppCompatActivity()
         // Devono essere attivi sia il GPS che la connessione a Internet
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
             LocationManager.NETWORK_PROVIDER)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(toggle.onOptionsItemSelected(item))
+        {
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 }

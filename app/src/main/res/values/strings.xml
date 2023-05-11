@@ -36,4 +36,6 @@
     <string name="old_password">Enter old password</string>
     <string name="new_password">Enter new password</string>
     <string name="change">CHANGE</string>
+    <string name="open">Open</string>
+    <string name="close">Close</string>
 </resources>

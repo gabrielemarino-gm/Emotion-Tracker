@@ -15,14 +15,18 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.database.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
@@ -42,9 +46,10 @@ class MapActivity: AppCompatActivity()
     private val MY_PERMISSIONS_REQUEST_LOCATION = 123
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var buttonClicked : Boolean = false
+    lateinit var toggle: ActionBarDrawerToggle
 
     init {
-        listCluster= mutableListOf<ClusterCentroid>()
+        listCluster = mutableListOf<ClusterCentroid>()
     }
 
     override fun onCreate(savedInstanceState: Bundle?)
@@ -89,6 +94,7 @@ class MapActivity: AppCompatActivity()
                 keepPositionVisible(myRef,map)
                 return true
             }
+
             override fun onZoom(event: ZoomEvent?): Boolean {
                 println("ZOOM")
                 //keepPositionVisible(myRef,map)
@@ -96,11 +102,57 @@ class MapActivity: AppCompatActivity()
             }
         })
 
+        // keepPositionVisible(myRef,map)
         //generateClusters(myRef, map)
+
+
+        val drawerLayout: DrawerLayout = findViewById(R.id.drawerLayout)
+        val navView: NavigationView = findViewById(R.id.nav_view)
+
+        toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
+
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        navView.setNavigationItemSelectedListener {
+            when(it.itemId)
+            {
+                // On Click over the menu's Home Button
+                R.id.nav_home -> {
+                    val trialPage = Intent(this, MapActivity::class.java)
+                    startActivity(trialPage)
+                }
+
+                // On Click over the menu's Map Button
+                R.id.nav_map -> Toast.makeText(applicationContext,"Already in Map", Toast.LENGTH_SHORT).show()
+
+                // On Click over the menu's Account Button
+                R.id.nav_account -> {
+                    val trialPage = Intent(this, TrialActivity::class.java)
+                    startActivity(trialPage)
+                }
+
+                // On Click over the menu's Logout Button
+                R.id.nav_logout -> {
+                    //remove token from sharedPreferences
+                    val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+                    val editor = prefs.edit()
+                    editor.remove("token")
+                    editor.apply()
+
+                    val loginPage = Intent(this, LoginActivity::class.java)
+                    startActivity(loginPage)
+                    finish()
+                }
+            }
+            true
+        }
     }
 
-    private fun set_fragment_ranking() {
-
+    private fun set_fragment_ranking()
+    {
         val button = findViewById<Button>(R.id.ranking_button)
         val fragment_ranking=RankingFragment()
         val parentLayout=findViewById<ConstraintLayout>(R.id.map_page)
@@ -113,14 +165,13 @@ class MapActivity: AppCompatActivity()
 
             val anim = ObjectAnimator.ofFloat(button, "x", button.x, screenWidth*0.8.toFloat())
 
-            if(!buttonClicked) {
+            if(!buttonClicked)
+            {
+                buttonClicked = true
 
-                buttonClicked=true
-
-                println("fragment appear")
+                // println("fragment appear")
                 anim.addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-
 
                             val fragment = RankingFragment()
                             supportFragmentManager.beginTransaction()
@@ -131,7 +182,9 @@ class MapActivity: AppCompatActivity()
                 })
                 // Start the animation
                 anim.start()
-            } else {
+            }
+            else
+            {
                 println("fragment disappear")
                 buttonClicked=false
                 val anim = ObjectAnimator.ofFloat(button, "x", button.x, 0f)
@@ -141,7 +194,6 @@ class MapActivity: AppCompatActivity()
 
                 anim.addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-
 
                         val fragment = supportFragmentManager.findFragmentById(R.id.fragment_ranking)
                         fragment?.let {
@@ -153,13 +205,11 @@ class MapActivity: AppCompatActivity()
 
                 anim.start()
             }
-
-
         }
     }
 
-    private fun keepPositionVisible(myRef: DatabaseReference, map: MapView){
-
+    private fun keepPositionVisible(myRef: DatabaseReference, map: MapView)
+    {
         val currentTimeMillis = System.currentTimeMillis()
         val twoHoursAgoMillis = currentTimeMillis - (2* 60 * 60 * 1000) //it takes two hour back from the current time
 
@@ -224,13 +274,14 @@ class MapActivity: AppCompatActivity()
         // Need to retrive only the point inside the screen of the user and in given time interval.
         // Retrive point and recompte clustering each time the user move the map.
 
-                if(myRef.isNotEmpty()) {
+                if(myRef.isNotEmpty())
+                {
                     val data = mutableListOf<List<Double>>()
                     val labeledClass = mutableListOf<Double>()
 
                     // ( Loop through the results and do something with each one
-                    for (childData in myRef) {
-
+                    for (childData in myRef)
+                    {
                         //val childData = child as HashMap<String, Any>
                         //println("elem$childData")
 
@@ -258,10 +309,12 @@ class MapActivity: AppCompatActivity()
                     // Execution of the cluster
                     val labels = dbscan.y
 
-                    // (    Discover the points of each cluster.
+            // (    Discover the points of each cluster.
                     val clusterPoints = mutableMapOf<Int, MutableList<List<Double>>>()
                     val scorePointCluster = mutableMapOf<Int, MutableList<List<Double>>>()
-                    for (i in dataArray.indices) {
+
+                    for (i in dataArray.indices)
+                    {
                         val label = labels[i]
                         val point = dataArray[i].toList()
                         val score = scoreArray[i]
@@ -269,27 +322,29 @@ class MapActivity: AppCompatActivity()
                         scorePointCluster.getOrPut(label, { mutableListOf() }).add(listOf(score))
                         clusterPoints.getOrPut(label, { mutableListOf() }).add(point)
                     }
-                    // )
+            // )
 
                     val clusterList = mutableListOf<ClusterCentroid>()
 
                     // Find the centroid: the means of all the points inside a single cluster
-                    for (i in clusterPoints.keys) {
+                    for (i in clusterPoints.keys)
+                    {
                         // println("DBG: Cluster $i: $clusterPoints[i]")
                         var lat: Double = 0.0
                         var lon: Double = 0.0
                         var sco: Double = 0.0
                         var numberOfPointsInCluster = 0
 
-                        for (point in clusterPoints[i]!!) {
+                        for (point in clusterPoints[i]!!)
+                        {
                             lat = lat + point[0]
                             lon = lon + point[1]
-
                             numberOfPointsInCluster++  //count the number of points in the cluster
                         }
 
                         var scoreIndx: Int = 0
-                        while (scoreIndx < scorePointCluster[i]!!.size) {
+                        while (scoreIndx < scorePointCluster[i]!!.size)
+                        {
                             // println("DBG : scorePointCluster[i]!![scoreIndx] = ${scorePointCluster[i]!![scoreIndx]}")
                             sco = sco + scorePointCluster[i]!![scoreIndx][0]
                             scoreIndx++
@@ -536,6 +591,15 @@ class MapActivity: AppCompatActivity()
     fun getData(): Any {
 
         return listCluster.sortedByDescending { it.emotion }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(toggle.onOptionsItemSelected(item))
+        {
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 }
 

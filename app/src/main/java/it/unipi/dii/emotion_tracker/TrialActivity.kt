@@ -2,9 +2,13 @@ package it.unipi.dii.emotion_tracker
 
 
 import android.content.Context
+import android.content.Intent
+import android.location.LocationManager
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
@@ -12,22 +16,28 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.database.*
 import java.text.DateFormat
 import java.text.DateFormat.getDateInstance
 import java.util.Date
 import kotlin.math.roundToInt
 
-class TrialActivity : AppCompatActivity() {
+class TrialActivity : AppCompatActivity()
+{
     private lateinit var changePasswordButton: Button
     private lateinit var username: String
     private var dateOfBirth: String = ""
     private var happinessIndex: Double = 0.0
     private lateinit var lastLocations: List<Location>
+    lateinit var toggle: ActionBarDrawerToggle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +60,62 @@ class TrialActivity : AppCompatActivity() {
             transaction.commit()
             changePasswordButton.visibility = INVISIBLE
         }
+
+        // Menu Manage
+        val drawerLayout: DrawerLayout = findViewById(R.id.drawerLayout)
+        val navView: NavigationView = findViewById(R.id.nav_view)
+
+        toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
+
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        navView.setNavigationItemSelectedListener {
+            when(it.itemId)
+            {
+                // On Click over the menu's Home Button
+                R.id.nav_home -> Toast.makeText(applicationContext,"Already in Home", Toast.LENGTH_SHORT).show()
+
+                // On Click over the menu's Map Button
+                R.id.nav_map -> {
+                    if(isLocationEnabled())
+                    {
+                        val mapPage = Intent(this, MapActivity::class.java)
+                        startActivity(mapPage)
+                    }
+                    else
+                    {
+                        // Ask to activate the GPS
+                        Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                        startActivity(intent)
+                    }
+                }
+
+                // On Click over the menu's Account Button
+                R.id.nav_account -> {
+                    val trialPage = Intent(this, TrialActivity::class.java)
+                    startActivity(trialPage)
+                }
+
+                // On Click over the menu's Logout Button
+                R.id.nav_logout -> {
+                    //remove token from sharedPreferences
+                    val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+                    val editor = prefs.edit()
+                    editor.remove("token")
+                    editor.apply()
+
+                    val loginPage = Intent(this, LoginActivity::class.java)
+                    startActivity(loginPage)
+                    finish()
+                }
+            }
+            true
+        }
+
     }
 
     private fun retrieveHappiness() {
@@ -202,6 +268,23 @@ class TrialActivity : AppCompatActivity() {
     fun resetButton() {
         changePasswordButton.visibility = VISIBLE
     }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(toggle.onOptionsItemSelected(item))
+        {
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun isLocationEnabled(): Boolean
+    {
+        val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        // Devono essere attivi sia il GPS che la connessione a Internet
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER)
+    }
 }
 
 class LocationListAdapter(private val locationList: List<Location>) :
@@ -227,6 +310,8 @@ class LocationListAdapter(private val locationList: List<Location>) :
     }
 
     override fun getItemCount() = locationList.size
+
+
 }
 
 

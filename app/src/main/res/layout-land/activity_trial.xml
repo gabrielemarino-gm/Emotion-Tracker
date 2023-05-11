@@ -1,176 +1,194 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".TrialActivity"
+    android:id="@+id/drawerLayout">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:context=".TrialActivity">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="cursive"
-            android:gravity="center"
-            android:text="@string/profile_title"
-            android:textColor="#651FFF"
-            android:textSize="40sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/fragment_container_view"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.084"
-            app:layout_constraintStart_toStartOf="@+id/guideline4"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
+            tools:context=".TrialActivity">
 
-        <TextView
-            android:id="@+id/profile_information"
-            android:layout_width="181dp"
-            android:layout_height="50dp"
-            android:fontFamily="cursive"
-            android:gravity="center"
-            android:text="@string/information_title"
-            android:textColor="#651FFF"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/username_profile"
-            app:layout_constraintEnd_toStartOf="@+id/guideline4"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/title" />
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="cursive"
+                android:gravity="center"
+                android:text="@string/profile_title"
+                android:textColor="#651FFF"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toTopOf="@+id/fragment_container_view"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.084"
+                app:layout_constraintStart_toStartOf="@+id/guideline4"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0" />
 
-        <Button
-            android:id="@+id/change_password_button"
-            android:layout_width="107dp"
-            android:layout_height="59dp"
-            android:layout_marginStart="40dp"
-            android:layout_marginTop="56dp"
-            android:text="@string/change_password"
-            android:textSize="11sp"
-            app:layout_constraintEnd_toStartOf="@+id/guideline4"
-            app:layout_constraintHorizontal_bias="0.22"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/happiness_face" />
+            <TextView
+                android:id="@+id/profile_information"
+                android:layout_width="181dp"
+                android:layout_height="50dp"
+                android:fontFamily="cursive"
+                android:gravity="center"
+                android:text="@string/information_title"
+                android:textColor="#651FFF"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toTopOf="@+id/username_profile"
+                app:layout_constraintEnd_toStartOf="@+id/guideline4"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/title" />
 
-        <TextView
-            android:id="@+id/username_profile"
-            android:layout_width="180dp"
-            android:layout_height="26dp"
-            android:text="@string/profile_username"
-            app:layout_constraintBottom_toTopOf="@+id/birthday_profile"
-            app:layout_constraintEnd_toStartOf="@+id/guideline4"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/profile_information"
-            tools:layout_editor_absoluteY="139dp" />
+            <Button
+                android:id="@+id/change_password_button"
+                android:layout_width="107dp"
+                android:layout_height="59dp"
+                android:layout_marginStart="40dp"
+                android:layout_marginTop="56dp"
+                android:text="@string/change_password"
+                android:textSize="11sp"
+                app:layout_constraintEnd_toStartOf="@+id/guideline4"
+                app:layout_constraintHorizontal_bias="0.22"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/happiness_face" />
 
-        <TextView
-            android:id="@+id/birthday_profile"
-            android:layout_width="180dp"
-            android:layout_height="27dp"
-            android:text="@string/profile_birthday"
-            app:layout_constraintEnd_toStartOf="@+id/guideline4"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/username_profile"
-            tools:layout_editor_absoluteY="174dp" />
+            <TextView
+                android:id="@+id/username_profile"
+                android:layout_width="180dp"
+                android:layout_height="26dp"
+                android:text="@string/profile_username"
+                app:layout_constraintBottom_toTopOf="@+id/birthday_profile"
+                app:layout_constraintEnd_toStartOf="@+id/guideline4"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/profile_information"
+                tools:layout_editor_absoluteY="139dp" />
 
-        <TextView
-            android:id="@+id/happiness_index"
-            android:layout_width="215dp"
-            android:layout_height="41dp"
-            android:layout_marginTop="10dp"
-            android:fontFamily="cursive"
-            android:gravity="center"
-            android:text="@string/happiness_index_title"
-            android:textColor="#651FFF"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/guideline4"
-            app:layout_constraintHorizontal_bias="0.479"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/birthday_profile" />
+            <TextView
+                android:id="@+id/birthday_profile"
+                android:layout_width="180dp"
+                android:layout_height="27dp"
+                android:text="@string/profile_birthday"
+                app:layout_constraintEnd_toStartOf="@+id/guideline4"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/username_profile"
+                tools:layout_editor_absoluteY="174dp" />
 
-        <TextView
-            android:id="@+id/happiness_index_value"
-            android:layout_width="68dp"
-            android:layout_height="50dp"
-            android:layout_marginBottom="48dp"
-            android:text="@string/happiness_index_value"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/change_password_button"
-            app:layout_constraintEnd_toStartOf="@+id/happiness_face"
-            app:layout_constraintHorizontal_bias="0.35"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/happiness_index"
-            app:layout_constraintVertical_bias="0.666" />
+            <TextView
+                android:id="@+id/happiness_index"
+                android:layout_width="215dp"
+                android:layout_height="41dp"
+                android:layout_marginTop="10dp"
+                android:fontFamily="cursive"
+                android:gravity="center"
+                android:text="@string/happiness_index_title"
+                android:textColor="#651FFF"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@+id/guideline4"
+                app:layout_constraintHorizontal_bias="0.479"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/birthday_profile" />
 
-        <ImageView
-            android:id="@+id/happiness_face"
-            android:layout_width="80dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="10dp"
-            app:layout_constraintBottom_toTopOf="@+id/change_password_button"
-            app:layout_constraintEnd_toStartOf="@+id/guideline4"
-            app:layout_constraintStart_toEndOf="@+id/happiness_index_value"
-            app:layout_constraintTop_toBottomOf="@+id/happiness_index" />
+            <TextView
+                android:id="@+id/happiness_index_value"
+                android:layout_width="68dp"
+                android:layout_height="50dp"
+                android:layout_marginBottom="48dp"
+                android:text="@string/happiness_index_value"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toTopOf="@+id/change_password_button"
+                app:layout_constraintEnd_toStartOf="@+id/happiness_face"
+                app:layout_constraintHorizontal_bias="0.35"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/happiness_index"
+                app:layout_constraintVertical_bias="0.666" />
 
-        <TextView
-            android:id="@+id/last_locations"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="100dp"
-            android:fontFamily="cursive"
-            android:gravity="center"
-            android:text="@string/locations_title"
-            android:textColor="#651FFF"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/location_list"
-            app:layout_constraintEnd_toStartOf="@+id/fragment_container_view"
-            app:layout_constraintHorizontal_bias="0.023"
-            app:layout_constraintStart_toStartOf="@+id/guideline4"
-            app:layout_constraintTop_toBottomOf="@+id/title" />
+            <ImageView
+                android:id="@+id/happiness_face"
+                android:layout_width="80dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                app:layout_constraintBottom_toTopOf="@+id/change_password_button"
+                app:layout_constraintEnd_toStartOf="@+id/guideline4"
+                app:layout_constraintStart_toEndOf="@+id/happiness_index_value"
+                app:layout_constraintTop_toBottomOf="@+id/happiness_index" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/location_list"
-            android:layout_width="220dp"
-            android:layout_height="199dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="20dp"
-            android:scrollbarAlwaysDrawHorizontalTrack="false"
-            android:scrollbarAlwaysDrawVerticalTrack="false"
-            android:scrollbarSize="4dp"
-            android:scrollbarStyle="insideOverlay"
-            android:scrollbars="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/fragment_container_view"
-            app:layout_constraintStart_toStartOf="@+id/guideline4"
-            app:layout_constraintTop_toBottomOf="@+id/last_locations" />
+            <TextView
+                android:id="@+id/last_locations"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="100dp"
+                android:fontFamily="cursive"
+                android:gravity="center"
+                android:text="@string/locations_title"
+                android:textColor="#651FFF"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toTopOf="@+id/location_list"
+                app:layout_constraintEnd_toStartOf="@+id/fragment_container_view"
+                app:layout_constraintHorizontal_bias="0.023"
+                app:layout_constraintStart_toStartOf="@+id/guideline4"
+                app:layout_constraintTop_toBottomOf="@+id/title" />
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/fragment_container_view"
-            android:name="it.unipi.dii.emotion_tracker.CameraFragment"
-            android:layout_width="190dp"
-            android:layout_height="194dp"
-            android:layout_marginEnd="16dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/location_list"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.678"
-            tools:layout="@layout/fragment_camera" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/location_list"
+                android:layout_width="220dp"
+                android:layout_height="199dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="20dp"
+                android:scrollbarAlwaysDrawHorizontalTrack="false"
+                android:scrollbarAlwaysDrawVerticalTrack="false"
+                android:scrollbarSize="4dp"
+                android:scrollbarStyle="insideOverlay"
+                android:scrollbars="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/fragment_container_view"
+                app:layout_constraintStart_toStartOf="@+id/guideline4"
+                app:layout_constraintTop_toBottomOf="@+id/last_locations" />
 
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.35" />
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/fragment_container_view"
+                android:name="it.unipi.dii.emotion_tracker.CameraFragment"
+                android:layout_width="190dp"
+                android:layout_height="194dp"
+                android:layout_marginEnd="16dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/location_list"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.678"
+                tools:layout="@layout/fragment_camera" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.35" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <com.google.android.material.navigation.NavigationView
+    android:id="@+id/nav_view"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    app:headerLayout="@layout/nav_header"
+    app:menu="@menu/nav_menu"
+    android:layout_gravity="start"
+    android:fitsSystemWindows="true"/>
+
+</androidx.drawerlayout.widget.DrawerLayout>
