@@ -16,8 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import java.text.DateFormat
 import java.text.DateFormat.getDateInstance
 import java.util.Date
@@ -37,7 +36,8 @@ class TrialActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
         username = prefs.getString("username", "")!!
 
-        inflateProfile()
+        retrieveHappiness()
+        //inflateProfile()
 
         changePasswordButton = findViewById(R.id.change_password_button)
         changePasswordButton.setOnClickListener(){
@@ -51,7 +51,73 @@ class TrialActivity : AppCompatActivity() {
         }
     }
 
-    private fun inflateProfile(){
+    private fun retrieveHappiness() {
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
+        val posRef: DatabaseReference = database.getReference("position_emotion")
+        val userRef=posRef.orderByChild("username").equalTo(username)
+
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+
+                var posUserList= mutableListOf<LocationCell>()
+
+                snapshot.children.forEach{child ->
+                    val childData = child.value as java.util.HashMap<String, Any>
+
+                    val positionRecord=LocationCell(
+                        childData["latitude"] as Double,
+                        childData["longitude"] as Double,childData["street"] as String,childData["city"] as String,childData["emotion"] as Double,
+                        childData["timestamp"] as Long,childData["username"] as String)
+
+                    posUserList.add(positionRecord)
+                }
+
+                posUserList= posUserList.sortedByDescending { it.timestamp } as MutableList<LocationCell>
+
+
+                var sommaHappiness=0.0
+                var count=0
+
+                for(pos in posUserList){
+                    sommaHappiness+=pos.emotion
+                    count+=1
+                }
+
+                val happinessMean=sommaHappiness/count
+
+                //now we want to obtain the 5 latest location
+
+                posUserList= posUserList.take(5) as MutableList<LocationCell>
+
+                val timestampLast= mutableListOf<Long>()
+                val dateLast= mutableListOf<String>()
+                for(i in 0 until 5){
+                    timestampLast.add(posUserList[i].timestamp)
+                    val date = Date(timestampLast[i]) // create a new Date object from the timestamp
+                    val format = getDateInstance(DateFormat.DEFAULT) // create a date format
+                    val dateString = format.format(date) // format the date as a string
+                    dateLast.add(dateString)
+                }
+
+                val posList = listOf( Location(posUserList[0].street, posUserList[0].city, dateLast[0]),
+                    Location(posUserList[1].street, posUserList[1].city, dateLast[1]),
+                    Location(posUserList[2].street, posUserList[2].city, dateLast[2]),
+                    Location(posUserList[3].street, posUserList[3].city, dateLast[3]),
+                    Location(posUserList[4].street, posUserList[4].city, dateLast[4])
+                )
+
+                inflateProfile(happinessMean,posList)
+
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("database error in retrieve this info")
+
+            }
+        })
+    }
+
+    private fun inflateProfile(happinessMean: Double, posList: List<Location>) {
         val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef: DatabaseReference = database.getReference("users")
 
@@ -78,24 +144,8 @@ class TrialActivity : AppCompatActivity() {
 
         //compute happinessIndex and lastLocations
 
-        //TODO remove (used as timestamp for position/emotion locations, to get from database)
-        val timestamp = System.currentTimeMillis() // current timestamp in milliseconds
-        val date = Date(timestamp) // create a new Date object from the timestamp
-        val format = getDateInstance(DateFormat.DEFAULT) // create a date format
-        val dateString = format.format(date) // format the date as a string
-
-        //TODO query for documents
-
-        //TODO compute happiness
-        happinessIndex = 0.79
-
-        //TODO compute last locations
-        lastLocations = listOf( Location("ViaViaviaViaViaViaViaViaViaViVia1", "Pisa", dateString),
-            Location("Via2", "Pisa", dateString),
-            Location("Via3", "Pisa", dateString),
-            Location("Via4", "Pisa", dateString),
-            Location("Via5", "Pisa", dateString)
-        )
+        happinessIndex=happinessMean
+        lastLocations=posList
 
         val recyclerView = findViewById<RecyclerView>(R.id.location_list)
         val layoutManager = LinearLayoutManager(this)
@@ -118,6 +168,7 @@ class TrialActivity : AppCompatActivity() {
             happinessIndex >= 0.75 -> imageHappinessPath = R.drawable.happy_level4
         }
         findViewById<ImageView>(R.id.happiness_face).setImageResource(imageHappinessPath)
+
     }
 
     fun resetButton() {
@@ -152,7 +203,7 @@ class LocationListAdapter(private val locationList: List<Location>) :
 
 
 data class Location(
-    val street: String,
-    val city: String,
+    val street: String?,
+    val city: String?,
     val timestamp: String
 )
