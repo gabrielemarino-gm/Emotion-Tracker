@@ -121,7 +121,7 @@ class MapActivity: AppCompatActivity()
             {
                 // On Click over the menu's Home Button
                 R.id.nav_home -> {
-                    val trialPage = Intent(this, MapActivity::class.java)
+                    val trialPage = Intent(this, MainActivity::class.java)
                     startActivity(trialPage)
                 }
 
