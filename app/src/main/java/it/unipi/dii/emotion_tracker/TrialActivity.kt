@@ -76,7 +76,10 @@ class TrialActivity : AppCompatActivity()
             when(it.itemId)
             {
                 // On Click over the menu's Home Button
-                R.id.nav_home -> Toast.makeText(applicationContext,"Already in Home", Toast.LENGTH_SHORT).show()
+                R.id.nav_home -> {
+                    val trialPage = Intent(this, MapActivity::class.java)
+                    startActivity(trialPage)
+                }
 
                 // On Click over the menu's Map Button
                 R.id.nav_map -> {
@@ -95,10 +98,8 @@ class TrialActivity : AppCompatActivity()
                 }
 
                 // On Click over the menu's Account Button
-                R.id.nav_account -> {
-                    val trialPage = Intent(this, TrialActivity::class.java)
-                    startActivity(trialPage)
-                }
+                R.id.nav_account -> Toast.makeText(applicationContext,"Already in Account", Toast.LENGTH_SHORT).show()
+
 
                 // On Click over the menu's Logout Button
                 R.id.nav_logout -> {
