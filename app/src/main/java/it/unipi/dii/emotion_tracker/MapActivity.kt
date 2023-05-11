@@ -74,6 +74,11 @@ class MapActivity: AppCompatActivity()
         // val startPoint = GeoPoint(41.8902, 12.4922)
         // mapController.setCenter(startPoint)
 
+        //map.onResume()
+        //map.viewTreeObserver.addOnGlobalLayoutListener {
+        //  keepPositionVisible(myRef,map)
+        //}
+
         // This is useful for make an action when the user scrlol or zoom the map
         map.setMapListener(object: MapListener
         {
