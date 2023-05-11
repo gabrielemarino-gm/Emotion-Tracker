@@ -1,6 +1,7 @@
 package it.unipi.dii.emotion_tracker
 
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -32,10 +33,9 @@ class TrialActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_trial)
 
-        //val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
-        //username = prefs.getString("username", null) // retrieve the token with the user ID as a prefix
-
-        username = "fabio"
+        //Retrieve username of the logged user
+        val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+        username = prefs.getString("username", "")!!
 
         inflateProfile()
 
@@ -78,12 +78,18 @@ class TrialActivity : AppCompatActivity() {
 
         //compute happinessIndex and lastLocations
 
+        //TODO remove (used as timestamp for position/emotion locations, to get from database)
         val timestamp = System.currentTimeMillis() // current timestamp in milliseconds
         val date = Date(timestamp) // create a new Date object from the timestamp
         val format = getDateInstance(DateFormat.DEFAULT) // create a date format
         val dateString = format.format(date) // format the date as a string
 
+        //TODO query for documents
+
+        //TODO compute happiness
         happinessIndex = 0.79
+
+        //TODO compute last locations
         lastLocations = listOf( Location("ViaViaviaViaViaViaViaViaViaViVia1", "Pisa", dateString),
             Location("Via2", "Pisa", dateString),
             Location("Via3", "Pisa", dateString),

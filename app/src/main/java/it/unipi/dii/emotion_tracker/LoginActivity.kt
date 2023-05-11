@@ -48,7 +48,7 @@ class LoginActivity : AppCompatActivity() {
             validateLogin(username, password) { loginSuccessful ->
                 if (loginSuccessful) {
                     val token = UUID.randomUUID().toString()
-                    storeTokenLocally(this, token)
+                    storeTokenLocally(this, token, username)
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
                     finish()
@@ -161,7 +161,8 @@ class LoginActivity : AppCompatActivity() {
 
     private fun storeTokenLocally(
         context: Context,
-        token: String
+        token: String,
+        username: String
     ) {
         val sharedPreferences =
             context.getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
@@ -170,6 +171,7 @@ class LoginActivity : AppCompatActivity() {
 
         with(sharedPreferences.edit()) {
             putString("token", token)
+            putString("username", username)
             //putString("token_${user_id}",tokenExpirationMillis.toString())
             apply()
         }

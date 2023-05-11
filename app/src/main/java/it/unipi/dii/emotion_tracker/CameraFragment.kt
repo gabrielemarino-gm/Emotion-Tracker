@@ -1,6 +1,7 @@
 package it.unipi.dii.emotion_tracker
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -56,6 +57,8 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
     //Path to database
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
     private val myRef: DatabaseReference = database.getReference("position_emotion")
+    //Username of the current user
+    private lateinit var username: String
 
     //Accumulators to compute aggregated happiness Index
     private var happinessAccumulator: Double = 0.0
@@ -77,6 +80,10 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         emotionRecognizer = EmotionRecognizer(
             context = requireContext(),
             resultsListener = this)
+
+        //Retrieve username of the logged user
+        val prefs = requireContext().getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+        username = prefs.getString("username", "")!!
 
         //ask for permissions
         val cameraLauncher = registerForActivityResult(
@@ -247,6 +254,9 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                     counter = 0
                     Log.d("TAG", "HappinessIndex: $happinessIndex")
                     val timestamp = System.currentTimeMillis()
+                    //TODO add username
+                    //val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex, timestamp, username)
+                    //myRef.push().setValue(locationCell)
                     val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex, timestamp)
                     myRef.push().setValue(locationCell)
                 }
