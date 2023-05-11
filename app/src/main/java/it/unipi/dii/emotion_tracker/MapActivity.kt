@@ -69,6 +69,11 @@ class MapActivity: AppCompatActivity()
 
         // Set the starting point on the map
         setStartPosition(map)
+
+        map.onResume()
+        map.viewTreeObserver.addOnGlobalLayoutListener {
+            keepPositionVisible(myRef,map)
+        }
         // val mapController = map.controller
         // mapController.setZoom(7.5)
         // val startPoint = GeoPoint(41.8902, 12.4922)
@@ -90,7 +95,6 @@ class MapActivity: AppCompatActivity()
                 return true
             }
         })
-
         //generateClusters(myRef, map)
     }
 
@@ -216,8 +220,8 @@ class MapActivity: AppCompatActivity()
 
     private fun generateClusters(myRef: MutableList<HashMap<String, Any>>, map: MapView)
     {
-        // Need to retrive only the point inside the screen of the user and in given time interval.
-        // Retrive point and recompte clustering each time the user move the map.
+        // Need to retrieve only the point inside the screen of the user and in given time interval.
+        // Retrieve point and recompute clustering each time the user move the map.
 
                 if(myRef.isNotEmpty()) {
                     val data = mutableListOf<List<Double>>()
