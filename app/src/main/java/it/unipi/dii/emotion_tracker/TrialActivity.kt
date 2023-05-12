@@ -14,6 +14,7 @@ import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -38,7 +39,7 @@ class TrialActivity : AppCompatActivity()
     private var happinessIndex: Double = 0.0
     private lateinit var lastLocations: List<Location>
     lateinit var toggle: ActionBarDrawerToggle
-
+    //
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_trial)
@@ -51,6 +52,7 @@ class TrialActivity : AppCompatActivity()
         //inflateProfile()
 
         changePasswordButton = findViewById(R.id.change_password_button)
+        //
         changePasswordButton.setOnClickListener(){
             val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
             val changePasswordFragment = ChangePasswordFragment(this, username)
@@ -60,6 +62,12 @@ class TrialActivity : AppCompatActivity()
             transaction.commit()
             changePasswordButton.visibility = INVISIBLE
         }
+
+        // Retrieve the old and the new password from 'ChangePasswordFragment'
+        // changePasswordFrameContainer = supportFragmentManager.findFragmentById(R.id.change_password_container) as ChangePasswordFragment
+        // oldPasswordEditText = changePasswordFrameContainer.view?.findViewById(R.id.old_password) ?: EditText(this)
+        // newPasswordEditText = changePasswordFrameContainer.view?.findViewById(R.id.new_password) ?: EditText(this)
+        //
 
         // Menu Manage
         val drawerLayout: DrawerLayout = findViewById(R.id.drawerLayout)
@@ -119,6 +127,8 @@ class TrialActivity : AppCompatActivity()
 
     }
 
+
+
     private fun retrieveHappiness() {
         val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
         val posRef: DatabaseReference = database.getReference("position_emotion")
@@ -159,6 +169,8 @@ class TrialActivity : AppCompatActivity()
                 val timestampLast= mutableListOf<Long>()
                 val dateLast= mutableListOf<String>()
                 for(i in 0 until 5){
+
+
                     timestampLast.add(posUserList[i].timestamp)
                     val date = Date(timestampLast[i]) // create a new Date object from the timestamp
                     val format = getDateInstance(DateFormat.DEFAULT) // create a date format
@@ -166,7 +178,8 @@ class TrialActivity : AppCompatActivity()
                     dateLast.add(dateString)
                 }
 
-                val posList = listOf( Location(posUserList[0].street, posUserList[0].city, dateLast[0]),
+                val posList = listOf(
+                    Location(posUserList[0].street, posUserList[0].city, dateLast[0]),
                     Location(posUserList[1].street, posUserList[1].city, dateLast[1]),
                     Location(posUserList[2].street, posUserList[2].city, dateLast[2]),
                     Location(posUserList[3].street, posUserList[3].city, dateLast[3]),

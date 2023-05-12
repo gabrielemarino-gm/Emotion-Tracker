@@ -162,8 +162,8 @@
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/fragment_container_view"
                 android:name="it.unipi.dii.emotion_tracker.CameraFragment"
-                android:layout_width="190dp"
-                android:layout_height="194dp"
+                android:layout_width="188dp"
+                android:layout_height="299dp"
                 android:layout_marginEnd="16dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -171,6 +171,16 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.678"
                 tools:layout="@layout/fragment_camera" />
+
+            <FrameLayout
+                android:id="@+id/change_password_container"
+                android:layout_width="482dp"
+                android:layout_height="340dp"
+                android:visibility="visible"
+                app:layout_constraintEnd_toStartOf="@+id/fragment_container_view"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteY="48dp" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline4"

@@ -19,6 +19,10 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var passwordEditText: EditText
     private lateinit var loginButton: Button
     private lateinit var registerButton: Button
+    companion object{
+        private const val LOGGED_USERNAME_KEY ="LOGGED_USERNAME_KEY"
+        private const val LOGGED_USER_PASSWORD_KEY ="LOGGED_USER_PASSWORD_KEY"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,13 +36,13 @@ class LoginActivity : AppCompatActivity() {
 
         var login = 0
 
-// TODO saved state of the UI elements.
+ // TODO saved state of the UI elements.
         // Restore the state of the UI elements if savedInstanceState is not null
         if (savedInstanceState != null) {
-            val username = savedInstanceState.getString("USERNAME")
+            val username = savedInstanceState.getString(LOGGED_USERNAME_KEY)
             usernameEditText.setText(username)
 
-            val password = savedInstanceState.getString("PASSWORD")
+            val password = savedInstanceState.getString(LOGGED_USER_PASSWORD_KEY)
             passwordEditText.setText(password)
         }
         checkActiveSession() //to avoid to make login with username and password
@@ -72,8 +76,8 @@ class LoginActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         // Save the state of the UI elements into the bundle
-        outState.putString("USERNAME", usernameEditText.text.toString())
-        outState.putString("PASSWORD", passwordEditText.text.toString())
+        outState.putString(LOGGED_USERNAME_KEY, usernameEditText.text.toString())
+        outState.putString(LOGGED_USER_PASSWORD_KEY, passwordEditText.text.toString())
     }
 
     private fun getViewBasedOnOrientation() {

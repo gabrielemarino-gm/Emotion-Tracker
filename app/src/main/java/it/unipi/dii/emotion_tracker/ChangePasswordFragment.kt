@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.firebase.database.DatabaseReference
@@ -29,6 +30,17 @@ class ChangePasswordFragment(
 
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
     private val usersRef: DatabaseReference = database.getReference("users")
+    // rotation related
+    // rotation related
+    private lateinit var oldPasswordEditText:EditText
+    private lateinit var newPasswordEditText : EditText
+    companion object{
+        private const val CHANGE_PASSWORD_CONTAINER_KEY ="CHANGE_PASSWORD_KEY"
+        private const val CAMERA_FRAGMENT_KEY ="CAMERA_FRAGMENT_KEY"
+        private const val LATEST_LOCATIONS_KEY="LATEST_LOCATIONS_KEY"
+        private const val OLD_PASSWORD_KEY ="OLD_PASSWORD_KEY"
+        private const val NEW_PASSWORD_KEY ="NEW_PASSWORD_KEY"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,16 +50,27 @@ class ChangePasswordFragment(
         //bind layout to Kotlin objects
         binding = FragmentChangePasswordBinding.inflate(inflater)
         goBackButton = fragmentChangePasswordBinding.backButton
+        //rotation:
+        // access the text values of old and new password fields then save them to the bundle
+        oldPasswordEditText = binding?.oldPassword!!
+        newPasswordEditText = binding?.oldPassword!!
+        // retrieve the values if saved to the bundle
+        // Retrieving saved values (if any) from the bundle
+        if (savedInstanceState != null) {
+            val oldPassword_saved = savedInstanceState.getString(OLD_PASSWORD_KEY)
+            oldPasswordEditText.setText(oldPassword_saved)
+            val newPassword_saved = savedInstanceState.getString(NEW_PASSWORD_KEY)
+            newPasswordEditText.setText(newPassword_saved)
+        }
         goBackButton.setOnClickListener(){
             parentFragmentManager.beginTransaction().remove(this).commit()
             // remove the fragment from back stack
             parentFragmentManager.popBackStack()
         }
-
         changePasswordButton = fragmentChangePasswordBinding.changePassword
         changePasswordButton.setOnClickListener {
-            val oldPassword = fragmentChangePasswordBinding.oldPassword.text.toString()
-            val newPassword = encryptPassword(fragmentChangePasswordBinding.newPassword.text.toString())
+             val oldPassword = fragmentChangePasswordBinding.oldPassword.text.toString()
+             val newPassword = encryptPassword(fragmentChangePasswordBinding.newPassword.text.toString())
 
             validatePassword(username, oldPassword) { childId ->
                 if (childId != null) {
@@ -69,8 +92,13 @@ class ChangePasswordFragment(
                 }
             }
         }
-
         return fragmentChangePasswordBinding.root
+    }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(OLD_PASSWORD_KEY, oldPasswordEditText.toString())
+        outState.putString(NEW_PASSWORD_KEY, newPasswordEditText.toString())
+        //binding?.newPassword?.text.toString()
     }
 
     private fun encryptPassword(password: String): String {

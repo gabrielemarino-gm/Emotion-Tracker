@@ -76,6 +76,4 @@
             android:text="@string/register" />
 
     </LinearLayout>
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
