@@ -36,7 +36,7 @@ class LoginActivity : AppCompatActivity() {
 
         var login = 0
 
- // TODO saved state of the UI elements.
+        // TODO saved state of the UI elements., task completed
         // Restore the state of the UI elements if savedInstanceState is not null
         if (savedInstanceState != null) {
             val username = savedInstanceState.getString(LOGGED_USERNAME_KEY)

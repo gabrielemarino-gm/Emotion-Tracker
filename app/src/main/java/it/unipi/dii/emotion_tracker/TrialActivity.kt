@@ -33,7 +33,7 @@ import kotlin.math.roundToInt
 
 class TrialActivity : AppCompatActivity()
 {
-    private lateinit var changePasswordButton: Button
+    lateinit var changePasswordButton: Button
     private lateinit var username: String
     private var dateOfBirth: String = ""
     private var happinessIndex: Double = 0.0
@@ -60,7 +60,7 @@ class TrialActivity : AppCompatActivity()
             transaction.addToBackStack(null)
             transaction.setReorderingAllowed(true)
             transaction.commit()
-            changePasswordButton.visibility = INVISIBLE
+            //changePasswordButton.visibility = INVISIBLE
         }
 
         // Retrieve the old and the new password from 'ChangePasswordFragment'
@@ -281,6 +281,10 @@ class TrialActivity : AppCompatActivity()
 
     fun resetButton() {
         changePasswordButton.visibility = VISIBLE
+    }
+
+    fun setButtonToInvisible(){
+        changePasswordButton.visibility = INVISIBLE
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

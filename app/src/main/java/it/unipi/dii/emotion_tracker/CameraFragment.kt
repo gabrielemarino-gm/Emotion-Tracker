@@ -142,7 +142,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            val windowManager = requireActivity().windowManager;
+            val windowManager = requireActivity().windowManager
             val rotation = windowManager.defaultDisplay.rotation
 
             // Preview

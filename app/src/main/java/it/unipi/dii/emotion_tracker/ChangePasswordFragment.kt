@@ -20,6 +20,9 @@ class ChangePasswordFragment(
     private val parentActivity : TrialActivity,
     private val username: String
 ) : Fragment() {
+    //constructor
+    constructor() : this(TrialActivity(),"")
+
     private lateinit var changePasswordButton: Button
     private lateinit var goBackButton: Button
     //Binding to layout objects
@@ -30,7 +33,6 @@ class ChangePasswordFragment(
 
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
     private val usersRef: DatabaseReference = database.getReference("users")
-    // rotation related
     // rotation related
     private lateinit var oldPasswordEditText:EditText
     private lateinit var newPasswordEditText : EditText
@@ -92,6 +94,7 @@ class ChangePasswordFragment(
                 }
             }
         }
+        parentActivity.setButtonToInvisible()
         return fragmentChangePasswordBinding.root
     }
     override fun onSaveInstanceState(outState: Bundle) {
@@ -137,8 +140,10 @@ class ChangePasswordFragment(
 
     }
 
-    override fun onDestroyView() {
+        override fun onDestroyView() {
         super.onDestroyView()
         parentActivity.resetButton()
     }
+
+
 }
