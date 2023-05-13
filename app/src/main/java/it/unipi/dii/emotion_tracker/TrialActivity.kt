@@ -33,13 +33,13 @@ import kotlin.math.roundToInt
 
 class TrialActivity : AppCompatActivity()
 {
-    lateinit var changePasswordButton: Button
+    private var changePasswordButton: Button? = null
     private lateinit var username: String
     private var dateOfBirth: String = ""
     private var happinessIndex: Double = 0.0
     private lateinit var lastLocations: List<Location>
     lateinit var toggle: ActionBarDrawerToggle
-    //
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_trial)
@@ -52,8 +52,7 @@ class TrialActivity : AppCompatActivity()
         //inflateProfile()
 
         changePasswordButton = findViewById(R.id.change_password_button)
-        //
-        changePasswordButton.setOnClickListener(){
+        changePasswordButton?.setOnClickListener(){
             val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
             val changePasswordFragment = ChangePasswordFragment(this, username)
             transaction.add(R.id.change_password_container, changePasswordFragment, "change_password")
@@ -61,6 +60,12 @@ class TrialActivity : AppCompatActivity()
             transaction.setReorderingAllowed(true)
             transaction.commit()
             //changePasswordButton.visibility = INVISIBLE
+        }
+
+        if(supportFragmentManager.findFragmentByTag("change_password") != null){
+            val changePasswordFragment: ChangePasswordFragment? = supportFragmentManager.findFragmentByTag("change_password") as ChangePasswordFragment?
+            changePasswordFragment?.changeParentActivity(this)
+            changePasswordButton?.visibility = INVISIBLE
         }
 
         // Retrieve the old and the new password from 'ChangePasswordFragment'
@@ -280,11 +285,15 @@ class TrialActivity : AppCompatActivity()
     }
 
     fun resetButton() {
-        changePasswordButton.visibility = VISIBLE
+        if (changePasswordButton != null){
+            changePasswordButton?.visibility = VISIBLE
+        }
     }
 
     fun setButtonToInvisible(){
-        changePasswordButton.visibility = INVISIBLE
+        if(changePasswordButton != null){
+            changePasswordButton?.visibility = INVISIBLE
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

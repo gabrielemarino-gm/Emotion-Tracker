@@ -17,8 +17,8 @@ import java.security.MessageDigest
 import java.util.HashMap
 
 class ChangePasswordFragment(
-    private val parentActivity : TrialActivity,
-    private val username: String
+    private var parentActivity : TrialActivity,
+    private var username: String
 ) : Fragment() {
     //constructor
     constructor() : this(TrialActivity(),"")
@@ -51,11 +51,12 @@ class ChangePasswordFragment(
     ): View {
         //bind layout to Kotlin objects
         binding = FragmentChangePasswordBinding.inflate(inflater)
+
         goBackButton = fragmentChangePasswordBinding.backButton
         //rotation:
         // access the text values of old and new password fields then save them to the bundle
         oldPasswordEditText = binding?.oldPassword!!
-        newPasswordEditText = binding?.oldPassword!!
+        newPasswordEditText = binding?.newPassword!!
         // retrieve the values if saved to the bundle
         // Retrieving saved values (if any) from the bundle
         if (savedInstanceState != null) {
@@ -63,6 +64,7 @@ class ChangePasswordFragment(
             oldPasswordEditText.setText(oldPassword_saved)
             val newPassword_saved = savedInstanceState.getString(NEW_PASSWORD_KEY)
             newPasswordEditText.setText(newPassword_saved)
+            username = savedInstanceState.getString("username")!!
         }
         goBackButton.setOnClickListener(){
             parentFragmentManager.beginTransaction().remove(this).commit()
@@ -101,6 +103,7 @@ class ChangePasswordFragment(
         super.onSaveInstanceState(outState)
         outState.putString(OLD_PASSWORD_KEY, oldPasswordEditText.toString())
         outState.putString(NEW_PASSWORD_KEY, newPasswordEditText.toString())
+        outState.putString("username", username)
         //binding?.newPassword?.text.toString()
     }
 
@@ -143,6 +146,10 @@ class ChangePasswordFragment(
         override fun onDestroyView() {
         super.onDestroyView()
         parentActivity.resetButton()
+    }
+
+    fun changeParentActivity(trialActivity: TrialActivity) {
+        parentActivity = trialActivity
     }
 
 
