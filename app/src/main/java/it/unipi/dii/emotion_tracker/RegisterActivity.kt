@@ -14,6 +14,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.time.Year
 import java.util.Calendar
 
 class RegisterActivity : AppCompatActivity() {
@@ -24,6 +25,13 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var backButton: Button
     private lateinit var datePicker: DatePicker
     //
+    companion object {
+        private const val USERNAME_KEY ="USERNAME_KEY"
+        private const val PASSWORD_KEY ="PASSWORD_KEY"
+        private const val YEAR_KEY ="YEAR_KEY"
+        private const val MONTH_KEY ="MONTH_KEY"
+        private const val DAY_KEY ="DAY_KEY"
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
@@ -31,9 +39,10 @@ class RegisterActivity : AppCompatActivity() {
         passwordText = findViewById(R.id.password_x)
         registerButton = findViewById(R.id.register_x)
         backButton = findViewById(R.id.back_x)
-
+        //
         datePicker = findViewById(R.id.datePicker)
-        // limit the years from 2006 and 2006
+        // Here is the age restriction: that spans 1900 and 2006
+        // We assume that the user is of say age X years old such that: 18<= X <= 123 years
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.YEAR, 1900)
         val minDate = calendar.timeInMillis
@@ -42,18 +51,24 @@ class RegisterActivity : AppCompatActivity() {
         datePicker.minDate = minDate
         datePicker.maxDate = maxDate
 
-        //
-        // usernameText, passwordText, datePicker
-        val year = datePicker.year
-        val month = datePicker.month + 1
-        val day = datePicker.dayOfMonth
-        //
+        var year = datePicker.year
+        var month = datePicker.month+1
+        var day = datePicker.dayOfMonth
+
+        datePicker.init(year, month, day) { view, yearOfDOB, monthOfDOB, dayOfDOB ->
+            // TODO insert the DOB to Firebase database ...
+            year  = yearOfDOB
+            month = monthOfDOB
+            day   = dayOfDOB
+        }
+        // Retrieve the values from the <<Bundle>> for the username, password and the DOB values for any
+        // orientation change of the phone (Portrait or LandScape )
         if (savedInstanceState != null) {
-            usernameText.setText(savedInstanceState.getString("username"))
-            passwordText.setText(savedInstanceState.getString("password"))
-            val year = savedInstanceState.getInt("year")
-            val month = savedInstanceState.getInt("month")
-            val day = savedInstanceState.getInt("day")
+            usernameText.setText(savedInstanceState.getString(USERNAME_KEY))
+            passwordText.setText(savedInstanceState.getString(PASSWORD_KEY))
+            val year = savedInstanceState.getInt(YEAR_KEY)
+            val month = savedInstanceState.getInt(MONTH_KEY)
+            val day = savedInstanceState.getInt(DAY_KEY)
             datePicker.updateDate(year, month, day)
         }
         val database:FirebaseDatabase= FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
@@ -62,9 +77,10 @@ class RegisterActivity : AppCompatActivity() {
         registerButton.setOnClickListener(){
             controlloUsername(usernameText.text.toString(),myRef) { controllo ->
                 if (controllo) {
+
                     val user = User(
-                        usernameText.text.toString().trim(),
-                        encryptPassword(passwordText.text.toString().trim()),
+                        usernameText.text.toString(),
+                        encryptPassword(passwordText.text.toString()),
                         "${year}/${month}/${day}"
                     )
                     myRef.push().setValue(user)
@@ -124,22 +140,22 @@ class RegisterActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString("username", usernameText.text.toString())
-        outState.putString("password", passwordText.text.toString())
-        outState.putInt("year", datePicker.year)
-        outState.putInt("month", datePicker.month)
-        outState.putInt("day", datePicker.dayOfMonth)
+        outState.putString(USERNAME_KEY, usernameText.text.toString())
+        outState.putString(PASSWORD_KEY, passwordText.text.toString())
+        outState.putInt(YEAR_KEY, datePicker.year)
+        outState.putInt(MONTH_KEY, datePicker.month)
+        outState.putInt(DAY_KEY, datePicker.dayOfMonth)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         //
-        val savedUsername = savedInstanceState.getString("username")
-        val savedPassword = savedInstanceState.getString("password")
+        val savedUsername = savedInstanceState.getString(USERNAME_KEY)
+        val savedPassword = savedInstanceState.getString(PASSWORD_KEY)
         //datePicker
-        val savedYear = savedInstanceState.getInt("year")
-        val savedMonth = savedInstanceState.getInt("month")
-        val savedDay = savedInstanceState.getInt("day")
+        val savedYear = savedInstanceState.getInt(YEAR_KEY)
+        val savedMonth = savedInstanceState.getInt(MONTH_KEY)
+        val savedDay = savedInstanceState.getInt(DAY_KEY)
         // Update the views with the saved values
         usernameText.setText(savedUsername)
         passwordText.setText(savedPassword)

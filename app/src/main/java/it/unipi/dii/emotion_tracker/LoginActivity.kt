@@ -95,20 +95,6 @@ class LoginActivity : AppCompatActivity() {
     private fun getPhoneOrientation(): Int {
         return resources.configuration.orientation
     }
-    /*
-
-        override fun onConfigurationChanged(newConfig: Configuration) {
-        //TODO ....
-            super.onConfigurationChanged(newConfig)
-            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                setContentView(R.layout.activity_login)
-            } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-                setContentView(R.layout.activity_login)
-            }
-        }
-        */
-
-
     /*private fun retrieve_userID(username: String, database: FirebaseDatabase, callback: (String) -> Unit) {
 
         val myRef: DatabaseReference = database.getReference("users")
