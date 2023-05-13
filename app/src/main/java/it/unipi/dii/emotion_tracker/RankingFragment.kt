@@ -10,6 +10,7 @@ import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import java.util.*
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -65,7 +66,7 @@ class RankingFragment : Fragment() {
                     "street:${cluster.street}\n" +
                     "city:${cluster.city}\n" +
                     "emotion:${cluster.emotion}\n" +
-                    "date:${cluster.date}\n" +
+                    "date:${Date(cluster.timestampDate)}\n" +
                     "numberPoints:${cluster.numberOfPoints}"
 
             return view

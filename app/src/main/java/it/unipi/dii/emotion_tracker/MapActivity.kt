@@ -74,6 +74,11 @@ class MapActivity: AppCompatActivity()
 
         // Set the starting point on the map
         setStartPosition(map)
+        generateClusters(myRef,map)
+        //Retrieve username of the logged user
+        val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+        val username = prefs.getString("username", "")!!
+        val clusterRef: DatabaseReference = database.getReference("clusters_${username}")
         // val mapController = map.controller
         // mapController.setZoom(7.5)
         // val startPoint = GeoPoint(41.8902, 12.4922)
@@ -91,7 +96,7 @@ class MapActivity: AppCompatActivity()
             override fun onScroll(event: ScrollEvent?): Boolean
             {
                 println("SCROLL")
-                keepPositionVisible(myRef,map)
+                keepPositionVisible(clusterRef,map)
                 return true
             }
 
@@ -214,7 +219,7 @@ class MapActivity: AppCompatActivity()
         val twoHoursAgoMillis = currentTimeMillis - (2* 60 * 60 * 1000) //it takes two hour back from the current time
 
         val coordinates = getActualScreenCoordinatesInterval()  //it gives a vector of four coordinates(minLat,maxLat,minLong,maxLong) which delimitate the visible screen
-        println("coordinates${coordinates[0]}-${coordinates[1]}")
+        //println("coordinates${coordinates[0]}-${coordinates[1]}")
 
         val latRef=myRef.orderByChild("latitude").startAt(coordinates[0]).endAt(coordinates[1])
 
@@ -227,6 +232,7 @@ class MapActivity: AppCompatActivity()
         latRef.addListenerForSingleValueEvent(object : ValueEventListener{
             override fun onDataChange(snapshot: DataSnapshot) {
                 val timeRefs= mutableListOf<HashMap<String,Any>>()
+                val clusterList = mutableListOf<ClusterCentroid>()
                 val longRefList= mutableListOf<DataSnapshot>()
                 snapshot.children.forEach{child ->
                     val childData = child.value as HashMap<String,Any>
@@ -255,10 +261,23 @@ class MapActivity: AppCompatActivity()
                 for (element in longRefList){
                     val timeRef=element.value as HashMap<String,Any>
 
+                    println("element${timeRef}")
+                    val cluster = ClusterCentroid(
+                        timeRef.get("latitude") as Double,
+                        timeRef.get("longitude") as Double,
+                        timeRef.get("street") as String,
+                        timeRef.get("city") as String,
+                        timeRef.get("emotion") as Double,
+                        timeRef.get("numberOfPoints") as Long,
+                        timeRef.get("timestampDate") as Long
+                    )
+                    clusterList.add(cluster)
                     timeRefs.add(timeRef)
                     //println(timeRef)
                 }
-                generateClusters(timeRefs, map)
+                //generateClusters(timeRefs, map)
+                //println("size of list"+clusterList.size)
+                print_markers(clusterList,map)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -269,134 +288,149 @@ class MapActivity: AppCompatActivity()
         //return timeRefs
     }
 
-    private fun generateClusters(myRef: MutableList<HashMap<String, Any>>, map: MapView)
+    private fun generateClusters(myRef: DatabaseReference, map: MapView)
     {
-        // Need to retrive only the point inside the screen of the user and in given time interval.
-        // Retrive point and recompte clustering each time the user move the map.
+        // Need to retrieve only the point inside the screen of the user and in given time interval.
+        // Retrieve point and recompute clustering each time the user move the map.
 
-                if(myRef.isNotEmpty())
-                {
-                    val data = mutableListOf<List<Double>>()
-                    val labeledClass = mutableListOf<Double>()
+        //Retrieve username of the logged user
+        val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+        val username = prefs.getString("username", "")!!
 
-                    // ( Loop through the results and do something with each one
-                    for (childData in myRef)
-                    {
-                        //val childData = child as HashMap<String, Any>
-                        //println("elem$childData")
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
+        val clusterRef: DatabaseReference = database.getReference("clusters_${username}")
 
-                        data.add(
-                            listOf(
-                                childData.get("latitude") as Double,
-                                childData.get("longitude") as Double
-                            )
+        //clean the collection of the cluster for that specific user
+        clusterRef.removeValue()
+
+        myRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val data = mutableListOf<List<Double>>()
+                val labeledClass = mutableListOf<Double>()
+                snapshot.children.forEach { child ->
+
+                    val childData = child.value as HashMap<String, Any>
+                    //println("elem$childData")
+
+                    data.add(
+                        listOf(
+                            childData.get("latitude") as Double,
+                            childData.get("longitude") as Double
                         )
-                        labeledClass.add(((childData.get("emotion") as Double)))
+                    )
+                    labeledClass.add(((childData.get("emotion") as Double)))
 
-                    }
-                    // )
-
-
-                    // Convert the list in array, because the class DBSCAN accept only this type
-                    val dataArray = Array(data.size) { i -> data[i].toDoubleArray() }
-                    val scoreArray = Array(labeledClass.size) { i -> labeledClass[i] }
-
-
-
-                    // Create the DBSCAN model
-                    val dbscan = DBSCAN.fit(dataArray, 7, 0.001)
-
-                    // Execution of the cluster
-                    val labels = dbscan.y
-
-            // (    Discover the points of each cluster.
-                    val clusterPoints = mutableMapOf<Int, MutableList<List<Double>>>()
-                    val scorePointCluster = mutableMapOf<Int, MutableList<List<Double>>>()
-
-                    for (i in dataArray.indices)
-                    {
-                        val label = labels[i]
-                        val point = dataArray[i].toList()
-                        val score = scoreArray[i]
-
-                        scorePointCluster.getOrPut(label, { mutableListOf() }).add(listOf(score))
-                        clusterPoints.getOrPut(label, { mutableListOf() }).add(point)
-                    }
-            // )
-
-                    val clusterList = mutableListOf<ClusterCentroid>()
-
-                    // Find the centroid: the means of all the points inside a single cluster
-                    for (i in clusterPoints.keys)
-                    {
-                        // println("DBG: Cluster $i: $clusterPoints[i]")
-                        var lat: Double = 0.0
-                        var lon: Double = 0.0
-                        var sco: Double = 0.0
-                        var numberOfPointsInCluster = 0
-
-                        for (point in clusterPoints[i]!!)
-                        {
-                            lat = lat + point[0]
-                            lon = lon + point[1]
-                            numberOfPointsInCluster++  //count the number of points in the cluster
-                        }
-
-                        var scoreIndx: Int = 0
-                        while (scoreIndx < scorePointCluster[i]!!.size)
-                        {
-                            // println("DBG : scorePointCluster[i]!![scoreIndx] = ${scorePointCluster[i]!![scoreIndx]}")
-                            sco = sco + scorePointCluster[i]!![scoreIndx][0]
-                            scoreIndx++
-                        }
-
-                        //for (score in scorePointCluster[i]!!)
-                        //{
-                        //    sco = sco + score
-                        //    println("DBG: $score")
-                        //}
-
-                        lat = lat / clusterPoints[i]?.size!!
-                        lon = lon / clusterPoints[i]?.size!!
-                        sco = sco / scorePointCluster[i]?.size!!
-
-                        val geocoder = Geocoder(applicationContext, Locale.getDefault())
-                        val addresses = geocoder.getFromLocation(lat, lon, 1)
-                        val address = addresses?.get(0)
-
-                        val street = address?.thoroughfare
-                        val city = address?.locality
-
-                        // val currentCluster =  ClusterInfo(sco, lat, lon)
-                        // clusters = clusters.plus(currentCluster)
-
-                        //println("DBG: Cluster $i: $lat, $lon, score = $sco")
-
-                        val timestamp = System.currentTimeMillis()
-
-                        val cluster = ClusterCentroid(
-                            lat,
-                            lon,
-                            street,
-                            city,
-                            sco,
-                            numberOfPointsInCluster,
-                            Date(timestamp)
-                        )
-                        clusterList.add(cluster)
-
-                    }
-                    listCluster=clusterList
-                    print_markers(clusterList, map)
                 }
+                // )
+
+
+                // Convert the list in array, because the class DBSCAN accept only this type
+                val dataArray = Array(data.size) { i -> data[i].toDoubleArray() }
+                val scoreArray = Array(labeledClass.size) { i -> labeledClass[i] }
+
+
+                // Create the DBSCAN model
+                val dbscan = DBSCAN.fit(dataArray, 7, 0.001)
+
+                // Execution of the cluster
+                val labels = dbscan.y
+
+                // (    Discover the points of each cluster.
+                val clusterPoints = mutableMapOf<Int, MutableList<List<Double>>>()
+                val scorePointCluster = mutableMapOf<Int, MutableList<List<Double>>>()
+
+                for (i in dataArray.indices) {
+                    val label = labels[i]
+                    val point = dataArray[i].toList()
+                    val score = scoreArray[i]
+
+                    scorePointCluster.getOrPut(label, { mutableListOf() }).add(listOf(score))
+                    clusterPoints.getOrPut(label, { mutableListOf() }).add(point)
+                }
+                // )
+
+                val clusterList = mutableListOf<ClusterCentroid>()
+
+                // Find the centroid: the means of all the points inside a single cluster
+                for (i in clusterPoints.keys) {
+                    // println("DBG: Cluster $i: $clusterPoints[i]")
+                    var lat: Double = 0.0
+                    var lon: Double = 0.0
+                    var sco: Double = 0.0
+                    var numberOfPointsInCluster : Long = 0
+
+                    for (point in clusterPoints[i]!!) {
+                        lat = lat + point[0]
+                        lon = lon + point[1]
+                        numberOfPointsInCluster++  //count the number of points in the cluster
+                    }
+
+                    var scoreIndx: Int = 0
+                    while (scoreIndx < scorePointCluster[i]!!.size) {
+                        // println("DBG : scorePointCluster[i]!![scoreIndx] = ${scorePointCluster[i]!![scoreIndx]}")
+                        sco = sco + scorePointCluster[i]!![scoreIndx][0]
+                        scoreIndx++
+                    }
+
+                    //for (score in scorePointCluster[i]!!)
+                    //{
+                    //    sco = sco + score
+                    //    println("DBG: $score")
+                    //}
+
+                    lat = lat / clusterPoints[i]?.size!!
+                    lon = lon / clusterPoints[i]?.size!!
+                    sco = sco / scorePointCluster[i]?.size!!
+
+                    val geocoder = Geocoder(applicationContext, Locale.getDefault())
+                    val addresses = geocoder.getFromLocation(lat, lon, 1)
+                    val address = addresses?.get(0)
+
+                    val street = address?.thoroughfare
+                    val city = address?.locality
+
+                    // val currentCluster =  ClusterInfo(sco, lat, lon)
+                    // clusters = clusters.plus(currentCluster)
+
+                    //println("DBG: Cluster $i: $lat, $lon, score = $sco")
+
+                    //TODO maybe we should put the mean of all the date of the points inside the cluster, or other things
+                    val timestamp = System.currentTimeMillis()
+
+                    val cluster = ClusterCentroid(
+                        lat,
+                        lon,
+                        street,
+                        city,
+                        sco,
+                        numberOfPointsInCluster,
+                        timestamp
+                    )
+                    clusterList.add(cluster)
+                    clusterRef.push().setValue(cluster)
+
+                }
+                //listCluster = clusterList
+                //print_markers(clusterList, map)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("error")
+            }
+
+        })
     }
 
     private fun print_markers(clusterList: MutableList<ClusterCentroid>, map: MapView)
     {
         try
         {
+            //println("printing markers")
+            listCluster = clusterList
             for(cluster in clusterList)
             {
+                //println("clusterization$cluster")
+               // println("size of list"+clusterList.size)
                 var latitude: Double = cluster.latitude
                 var longitude: Double = cluster.longitude
 
@@ -408,7 +442,7 @@ class MapActivity: AppCompatActivity()
                         "street:${cluster.street}\n" +
                         "city:${cluster.city}\n" +
                         "emotion:${cluster.emotion}\n" +
-                        "date:${cluster.date}\n" +
+                        "date:${Date(cluster.timestampDate)}\n" +
                         "numberPoints:${cluster.numberOfPoints}"
 
                 val emotion_level = cluster.emotion
@@ -428,6 +462,7 @@ class MapActivity: AppCompatActivity()
                 }
 
                 map.overlays.add(marker)
+                //println("printed markers")
             }
         }
         catch (e: java.lang.Exception)
@@ -620,6 +655,6 @@ class ClusterCentroid(
     var street: String?,
     var city: String?,
     var emotion: Double,
-    var numberOfPoints: Int,
-    var date: Date
+    var numberOfPoints: Long,
+    var timestampDate: Long
 ){}
