@@ -58,7 +58,7 @@ class RegisterActivity : AppCompatActivity() {
         datePicker.init(year, month, day) { view, yearOfDOB, monthOfDOB, dayOfDOB ->
             // TODO insert the DOB to Firebase database ...
             year  = yearOfDOB
-            month = monthOfDOB
+            month = monthOfDOB + 1
             day   = dayOfDOB
         }
         // Retrieve the values from the <<Bundle>> for the username, password and the DOB values for any
