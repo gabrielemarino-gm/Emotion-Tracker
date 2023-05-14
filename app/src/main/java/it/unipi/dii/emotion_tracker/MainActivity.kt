@@ -2,6 +2,7 @@ package it.unipi.dii.emotion_tracker
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
@@ -16,6 +17,18 @@ class MainActivity : AppCompatActivity()
 {
     lateinit var toggle: ActionBarDrawerToggle
 
+    private lateinit var sharedPref: SharedPreferences
+    private var gpsMessageShown: Boolean = false
+    private var isRotated: Boolean = false
+
+    companion object{
+        private const val gpsMessageShown_KEY = "gpsMessageShown"
+        private const val  appPreferences_KEY = "appPreferences"
+        private const val isRotated_KEY = "isRotated"
+        private const val gpsIsOn_KEY = "GPS is ON"
+        private const val gpsIsOFF_KEY = "GPS is OFF"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
@@ -24,6 +37,23 @@ class MainActivity : AppCompatActivity()
         // val trialButton = findViewById<Button>(R.id.btn_toCamera)
         // val mapButton = findViewById<Button>(R.id.btn_toMap)
         // val logoutButton =findViewById<Button>(R.id.btn_logout)
+
+
+        sharedPref = getSharedPreferences(appPreferences_KEY, Context.MODE_PRIVATE)
+        // Check if GPS status has already been displayed
+        gpsMessageShown = sharedPref.getBoolean(gpsMessageShown_KEY, false)
+        isRotated = savedInstanceState?.getBoolean(isRotated_KEY, false) ?: false
+
+        if (!gpsMessageShown && !isRotated) {
+            // Check GPS status
+            checkGpsStatus()
+
+            // Update flag in SharedPreferences
+            sharedPref.edit().putBoolean(gpsMessageShown_KEY, true).apply()
+        }
+
+
+
 
         //necessary to know if the user is logged in, if he makes logout and then presses the button back he would enter in this page (not correct behaviour)
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
@@ -84,8 +114,8 @@ class MainActivity : AppCompatActivity()
                 // On Click over the menu's Logout Button
                 R.id.nav_logout -> {
                     //remove token from sharedPreferences
-                    val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
-                    val editor = prefs.edit()
+                    val prefs_logout = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+                    val editor = prefs_logout.edit()
                     editor.remove("token")
                     editor.apply()
 
@@ -131,6 +161,56 @@ class MainActivity : AppCompatActivity()
             finish()
         }*/
     }
+
+
+    //
+
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // Reset GPS message flag if the app is destroyed
+        if (!isChangingConfigurations) {
+            sharedPref.edit().putBoolean(gpsMessageShown_KEY, false).apply()
+        }
+    }
+    private fun checkGpsStatus() {
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        if (isGpsEnabled) {
+            // GPS is enabled
+            Toast.makeText(this, gpsIsOn_KEY, Toast.LENGTH_SHORT).show()
+        } else {
+            // GPS is disabled
+            Toast.makeText(this, gpsIsOFF_KEY, Toast.LENGTH_SHORT).show()
+        }
+    }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        // Save flag to indicate if the phone has been rotated
+        outState.putBoolean(isRotated_KEY, true)
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //
 
     private fun isLocationEnabled(): Boolean
     {
