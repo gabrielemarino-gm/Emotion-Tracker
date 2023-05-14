@@ -113,7 +113,7 @@ class MapActivity: AppCompatActivity()
             }
         })
 
-        // keepPositionVisible(myRef,map)
+        //keepPositionVisible(clusterRef,map)
         //generateClusters(myRef, map)
 
 
@@ -418,6 +418,7 @@ class MapActivity: AppCompatActivity()
                 }
                 //listCluster = clusterList
                 //print_markers(clusterList, map)
+                keepPositionVisible(clusterRef,map)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -474,6 +475,7 @@ class MapActivity: AppCompatActivity()
                     marker.icon = BitmapDrawable(resources, icon)
                     map.overlays.add(marker)
                     //println("printed markers")
+                    map.invalidate()
                     listPrintedCluster.add(cluster) //added cluster to the list of the cluster already printed on the map
                 }
                 //else{
