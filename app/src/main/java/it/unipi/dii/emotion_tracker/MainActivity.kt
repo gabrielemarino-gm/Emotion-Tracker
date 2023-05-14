@@ -6,8 +6,6 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.view.MenuItem
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -79,8 +77,8 @@ class MainActivity : AppCompatActivity()
 
                 // On Click over the menu's Account Button
                 R.id.nav_account -> {
-                    val trialPage = Intent(this, TrialActivity::class.java)
-                    startActivity(trialPage)
+                    val accountPage = Intent(this, AccountActivity::class.java)
+                    startActivity(accountPage)
                 }
 
                 // On Click over the menu's Logout Button
@@ -100,7 +98,7 @@ class MainActivity : AppCompatActivity()
         }
 
         /*trialButton.setOnClickListener{
-            val trialPage = Intent(this, TrialActivity::class.java)
+            val trialPage = Intent(this, AccountActivity::class.java)
             startActivity(trialPage)
         }
 

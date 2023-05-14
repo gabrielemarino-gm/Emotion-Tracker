@@ -17,11 +17,11 @@ import java.security.MessageDigest
 import java.util.HashMap
 
 class ChangePasswordFragment(
-    private var parentActivity : TrialActivity,
+    private var parentActivity : AccountActivity,
     private var username: String
 ) : Fragment() {
     //constructor
-    constructor() : this(TrialActivity(),"")
+    constructor() : this(AccountActivity(),"")
 
     private lateinit var changePasswordButton: Button
     private lateinit var goBackButton: Button
@@ -148,7 +148,7 @@ class ChangePasswordFragment(
         parentActivity.resetButton()
     }
 
-    fun changeParentActivity(trialActivity: TrialActivity) {
+    fun changeParentActivity(trialActivity: AccountActivity) {
         parentActivity = trialActivity
     }
 

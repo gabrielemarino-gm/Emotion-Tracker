@@ -135,8 +135,8 @@ class MapActivity: AppCompatActivity()
 
                 // On Click over the menu's Account Button
                 R.id.nav_account -> {
-                    val trialPage = Intent(this, TrialActivity::class.java)
-                    startActivity(trialPage)
+                    val accountPage = Intent(this, AccountActivity::class.java)
+                    startActivity(accountPage)
                 }
 
                 // On Click over the menu's Logout Button

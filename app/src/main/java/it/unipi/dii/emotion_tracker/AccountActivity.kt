@@ -14,7 +14,6 @@ import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -31,7 +30,7 @@ import java.text.DateFormat.getDateInstance
 import java.util.Date
 import kotlin.math.roundToInt
 
-class TrialActivity : AppCompatActivity()
+class AccountActivity : AppCompatActivity()
 {
     private var changePasswordButton: Button? = null
     private lateinit var username: String
@@ -42,7 +41,7 @@ class TrialActivity : AppCompatActivity()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_trial)
+        setContentView(R.layout.activity_account)
 
         //Retrieve username of the logged user
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
