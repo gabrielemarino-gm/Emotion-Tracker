@@ -38,6 +38,15 @@
 
         </org.osmdroid.views.MapView>
 
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragment_container_view"
+            android:name="it.unipi.dii.emotion_tracker.CameraFragment"
+            android:layout_width="190dp"
+            android:layout_height="194dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:layout="@layout/fragment_camera" />
+
         <FrameLayout
             android:id="@+id/fragment_ranking"
             android:layout_width="match_parent"
