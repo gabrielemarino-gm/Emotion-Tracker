@@ -24,6 +24,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
+import androidx.core.location.LocationManagerCompat.isLocationEnabled
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -42,6 +43,7 @@ import smile.clustering.DBSCAN
 import java.util.*
 
 private lateinit var listCluster: MutableList<ClusterCentroid>
+private lateinit var listPrintedCluster: MutableList<ClusterCentroid>
 class MapActivity: AppCompatActivity()
 {
 
@@ -52,6 +54,7 @@ class MapActivity: AppCompatActivity()
 
     init {
         listCluster = mutableListOf<ClusterCentroid>()
+        listPrintedCluster = mutableListOf<ClusterCentroid>()
     }
 
     override fun onCreate(savedInstanceState: Bundle?)
@@ -433,39 +436,49 @@ class MapActivity: AppCompatActivity()
             for(cluster in clusterList)
             {
                 //println("clusterization$cluster")
-               // println("size of list"+clusterList.size)
-                var latitude: Double = cluster.latitude
-                var longitude: Double = cluster.longitude
+                //println("size of list$listPrintedCluster")
+                if (clusterNotPrinted(cluster)) {
+                    val latitude: Double = cluster.latitude
+                    val longitude: Double = cluster.longitude
 
-                //println("DBG: Cluster $latitude -- $longitude")
-                val marker = Marker(map)
-                marker.position = GeoPoint(latitude, longitude)
-                marker.title = "lat:${cluster.latitude}\n" +
-                        "long:${cluster.longitude}\n" +
-                        "street:${cluster.street}\n" +
-                        "city:${cluster.city}\n" +
-                        "emotion:${cluster.emotion}\n" +
-                        "date:${Date(cluster.timestampDate)}\n" +
-                        "numberPoints:${cluster.numberOfPoints}"
+                    //println("DBG: Cluster $latitude -- $longitude")
+                    val marker = Marker(map)
+                    marker.position = GeoPoint(latitude, longitude)
+                    marker.title = "lat:${cluster.latitude}\n" +
+                            "long:${cluster.longitude}\n" +
+                            "street:${cluster.street}\n" +
+                            "city:${cluster.city}\n" +
+                            "emotion:${cluster.emotion}\n" +
+                            "date:${Date(cluster.timestampDate)}\n" +
+                            "numberPoints:${cluster.numberOfPoints}"
 
-                val emotion_level = cluster.emotion
-                //println(emotion_level.toDouble())
-                if (emotion_level > 0.50)
-                {
-                    //println("maggiore di 0.50")
-                    val icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
+                    val emotion_level = cluster.emotion
+                    //println(emotion_level.toDouble())
+                    var icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
+                    when {
+                        emotion_level < 0.25 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level1)
+                        emotion_level >= 0.25 && emotion_level < 0.5 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level2)
+                        emotion_level >= 0.5 && emotion_level < 0.75 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level3)
+                        emotion_level >= 0.75 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level4)
+                    }
+                    /*if (emotion_level > 0.50) {
+                        //println("maggiore di 0.50")
+                        val icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
+                        marker.icon = BitmapDrawable(resources, icon)
+
+                    } else {
+                        //println("minore di 0.50")
+                        val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_red_face)
+                        marker.icon = BitmapDrawable(resources, icon)
+                    }*/
                     marker.icon = BitmapDrawable(resources, icon)
-
+                    map.overlays.add(marker)
+                    //println("printed markers")
+                    listPrintedCluster.add(cluster) //added cluster to the list of the cluster already printed on the map
                 }
-                else
-                {
-                    //println("minore di 0.50")
-                    val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_red_face)
-                    marker.icon = BitmapDrawable(resources, icon)
-                }
-
-                map.overlays.add(marker)
-                //println("printed markers")
+                //else{
+                  //  println("cluster already printed")
+                //}
             }
         }
         catch (e: java.lang.Exception)
@@ -473,6 +486,15 @@ class MapActivity: AppCompatActivity()
             println("ERR: " + e.message)
             return
         }
+    }
+
+    private fun clusterNotPrinted(cluster: ClusterCentroid): Boolean {
+            for(element in listPrintedCluster){
+                if(cluster.latitude==element.latitude && cluster.longitude==element.longitude){
+                        return false  //it is already printed, it should not be printed
+                }
+            }
+            return true  //is not printed, it can go with the printing
     }
 
     private fun setStartPosition(map: MapView)
