@@ -56,5 +56,9 @@
             android:exported="false"
             />
         <!-- android:configChanges="orientation" -->
+
+        <service
+            android:name=".ClusterService"
+            android:exported="false"/>
     </application>
 </manifest>

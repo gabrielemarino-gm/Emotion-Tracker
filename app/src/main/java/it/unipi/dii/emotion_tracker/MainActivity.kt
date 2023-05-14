@@ -38,6 +38,10 @@ class MainActivity : AppCompatActivity()
         // val mapButton = findViewById<Button>(R.id.btn_toMap)
         // val logoutButton =findViewById<Button>(R.id.btn_logout)
 
+// (    START CLUSTER SERVICE
+        println("DBG: Starting service")
+        startService(Intent(this@MainActivity, ClusterService::class.java))
+// )
 
         sharedPref = getSharedPreferences(appPreferences_KEY, Context.MODE_PRIVATE)
         // Check if GPS status has already been displayed
@@ -53,9 +57,9 @@ class MainActivity : AppCompatActivity()
         }
 
 
-
-
-        //necessary to know if the user is logged in, if he makes logout and then presses the button back he would enter in this page (not correct behaviour)
+// (    IS USER LOGGED?
+//      Necessary to know if the user is logged in,
+//      if he makes logout and then presses the button back he would enter in this page (not correct behaviour)
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
         val token = prefs.getString("token", null)
 
@@ -72,7 +76,9 @@ class MainActivity : AppCompatActivity()
             // TODO(To be Implement)
             println("user logged")
         }
+// )
 
+// MENU
         val drawerLayout: DrawerLayout = findViewById(R.id.drawerLayout)
         val navView: NavigationView = findViewById(R.id.nav_view)
 
@@ -126,7 +132,7 @@ class MainActivity : AppCompatActivity()
             }
             true
         }
-
+// )
         /*trialButton.setOnClickListener{
             val trialPage = Intent(this, AccountActivity::class.java)
             startActivity(trialPage)
@@ -162,19 +168,20 @@ class MainActivity : AppCompatActivity()
         }*/
     }
 
-
-    //
-
-
-
-    override fun onDestroy() {
+    override fun onDestroy()
+    {
         super.onDestroy()
 
         // Reset GPS message flag if the app is destroyed
         if (!isChangingConfigurations) {
             sharedPref.edit().putBoolean(gpsMessageShown_KEY, false).apply()
         }
+
+// (    STOP CLUSTER SERVICE
+        stopService(Intent(this@MainActivity, ClusterService::class.java))
+// )
     }
+
     private fun checkGpsStatus() {
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)

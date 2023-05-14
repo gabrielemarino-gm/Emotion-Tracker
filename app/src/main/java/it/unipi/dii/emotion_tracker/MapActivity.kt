@@ -63,7 +63,7 @@ class MapActivity: AppCompatActivity()
         //FirebaseApp.initializeApp(this);
         setContentView(R.layout.activity_map)
 
-        set_fragment_ranking()
+        setFragmentRanking()
 
         Configuration.getInstance().userAgentValue = "it.unipi.dii.emotion_tracker"
 
@@ -80,7 +80,7 @@ class MapActivity: AppCompatActivity()
 
         // Set the starting point on the map
         setStartPosition(map)
-        generateClusters(myRef,map)
+        // generateClusters(myRef,map)
         //Retrieve username of the logged user
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
         val username = prefs.getString("username", "")!!
@@ -116,7 +116,7 @@ class MapActivity: AppCompatActivity()
         //keepPositionVisible(clusterRef,map)
         //generateClusters(myRef, map)
 
-
+// (    MENU
         val drawerLayout: DrawerLayout = findViewById(R.id.drawerLayout)
         val navView: NavigationView = findViewById(R.id.nav_view)
 
@@ -160,9 +160,10 @@ class MapActivity: AppCompatActivity()
             }
             true
         }
+// )
     }
 
-    private fun set_fragment_ranking()
+    private fun setFragmentRanking()
     {
         val button = findViewById<Button>(R.id.ranking_button)
         val fragment_ranking=RankingFragment()
@@ -267,7 +268,7 @@ class MapActivity: AppCompatActivity()
                 for (element in longRefList){
                     val timeRef=element.value as HashMap<String,Any>
 
-                    println("element${timeRef}")
+                    println("DBG: element = ${timeRef}")
                     val cluster = ClusterCentroid(
                         timeRef.get("latitude") as Double,
                         timeRef.get("longitude") as Double,
@@ -283,7 +284,7 @@ class MapActivity: AppCompatActivity()
                 }
                 //generateClusters(timeRefs, map)
                 //println("size of list"+clusterList.size)
-                print_markers(clusterList,map)
+                printMarkers(clusterList,map)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -294,6 +295,7 @@ class MapActivity: AppCompatActivity()
         //return timeRefs
     }
 
+    /*
     private fun generateClusters(myRef: DatabaseReference, map: MapView)
     {
         // Need to retrieve only the point inside the screen of the user and in given time interval.
@@ -427,8 +429,8 @@ class MapActivity: AppCompatActivity()
 
         })
     }
-
-    private fun print_markers(clusterList: MutableList<ClusterCentroid>, map: MapView)
+    */
+    private fun printMarkers(clusterList: MutableList<ClusterCentroid>, map: MapView)
     {
         try
         {
@@ -664,24 +666,3 @@ class MapActivity: AppCompatActivity()
         return super.onOptionsItemSelected(item)
     }
 }
-
-class LocationCell(
-    var latitude: Double,
-    var longitude: Double,
-    var street: String?,
-    var city: String?,
-    var emotion: Double,
-    var timestamp: Long,
-    var username: String
-) {
-}
-
-class ClusterCentroid(
-    var latitude: Double,
-    var longitude: Double,
-    var street: String?,
-    var city: String?,
-    var emotion: Double,
-    var numberOfPoints: Long,
-    var timestampDate: Long
-){}
