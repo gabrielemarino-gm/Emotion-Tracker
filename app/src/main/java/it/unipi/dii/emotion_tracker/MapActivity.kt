@@ -454,18 +454,24 @@ class MapActivity: AppCompatActivity()
 
                     val emotion_level = cluster.emotion
                     //println(emotion_level.toDouble())
-                    if (emotion_level > 0.50) {
+                    var icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
+                    when {
+                        emotion_level < 0.25 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level1)
+                        emotion_level >= 0.25 && emotion_level < 0.5 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level2)
+                        emotion_level >= 0.5 && emotion_level < 0.75 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level3)
+                        emotion_level >= 0.75 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level4)
+                    }
+                    /*if (emotion_level > 0.50) {
                         //println("maggiore di 0.50")
-                        val icon =
-                            BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
+                        val icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
                         marker.icon = BitmapDrawable(resources, icon)
 
                     } else {
                         //println("minore di 0.50")
                         val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_red_face)
                         marker.icon = BitmapDrawable(resources, icon)
-                    }
-
+                    }*/
+                    marker.icon = BitmapDrawable(resources, icon)
                     map.overlays.add(marker)
                     //println("printed markers")
                     listPrintedCluster.add(cluster) //added cluster to the list of the cluster already printed on the map
