@@ -133,8 +133,15 @@ class ClusterService(): Service()
                     val addresses = geocoder.getFromLocation(lat, lon, 1)
                     val address = addresses?.get(0)
 
-                    val street = address?.thoroughfare
-                    val city = address?.locality
+                    var street = address?.thoroughfare
+                    var city = address?.locality
+
+                    if(street==null){
+                        street="Unknown street"
+                    }
+                    if(city==null){
+                        city="Unknown city"
+                    }
 
                     val timestamp = System.currentTimeMillis()
 
