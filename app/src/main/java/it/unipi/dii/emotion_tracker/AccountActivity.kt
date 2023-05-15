@@ -47,8 +47,7 @@ class AccountActivity : AppCompatActivity()
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
         username = prefs.getString("username", "")!!
 
-        retrieveHappiness()
-        //inflateProfile()
+        retrieveDataFromDB()
 
         changePasswordButton = findViewById(R.id.change_password_button)
         changePasswordButton?.setOnClickListener(){
@@ -58,22 +57,17 @@ class AccountActivity : AppCompatActivity()
             transaction.addToBackStack(null)
             transaction.setReorderingAllowed(true)
             transaction.commit()
-            //changePasswordButton.visibility = INVISIBLE
         }
 
+        //If fragment already exists, retrieve it and update its parent activity (rotation-related issue)
         if(supportFragmentManager.findFragmentByTag("change_password") != null){
             val changePasswordFragment: ChangePasswordFragment? = supportFragmentManager.findFragmentByTag("change_password") as ChangePasswordFragment?
             changePasswordFragment?.changeParentActivity(this)
+            //Also set button to change password as invisible
             changePasswordButton?.visibility = INVISIBLE
         }
 
-        // Retrieve the old and the new password from 'ChangePasswordFragment'
-        // changePasswordFrameContainer = supportFragmentManager.findFragmentById(R.id.change_password_container) as ChangePasswordFragment
-        // oldPasswordEditText = changePasswordFrameContainer.view?.findViewById(R.id.old_password) ?: EditText(this)
-        // newPasswordEditText = changePasswordFrameContainer.view?.findViewById(R.id.new_password) ?: EditText(this)
-        //
-
-        // Menu Manage
+        // Menu Manager
         val drawerLayout: DrawerLayout = findViewById(R.id.drawerLayout)
         val navView: NavigationView = findViewById(R.id.nav_view)
 
@@ -116,7 +110,6 @@ class AccountActivity : AppCompatActivity()
                 // On Click over the menu's Logout Button
                 R.id.nav_logout -> {
                     //remove token from sharedPreferences
-                    val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
                     val editor = prefs.edit()
                     editor.remove("token")
                     editor.apply()
@@ -131,17 +124,19 @@ class AccountActivity : AppCompatActivity()
 
     }
 
-
-
-    private fun retrieveHappiness() {
+    private fun retrieveDataFromDB() {
         val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
         val posRef: DatabaseReference = database.getReference("position_emotion")
-        val userRef=posRef.orderByChild("username").equalTo(username)
+
+        // retrieve all the position_emotion records belonging to logged user
+        val userRef = posRef.orderByChild("username").equalTo(username)
 
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
 
                 var posUserList= mutableListOf<LocationCell>()
+
+                var happinessAccumulator = 0.0
 
                 snapshot.children.forEach{child ->
                     val childData = child.value as java.util.HashMap<String, Any>
@@ -151,80 +146,63 @@ class AccountActivity : AppCompatActivity()
                         childData["longitude"] as Double,childData["street"] as String,childData["city"] as String,childData["emotion"] as Double,
                         childData["timestamp"] as Long,childData["username"] as String)
 
+                    // increase happiness accumulator
+                    happinessAccumulator += positionRecord.emotion
                     posUserList.add(positionRecord)
                 }
 
-                posUserList= posUserList.sortedByDescending { it.timestamp } as MutableList<LocationCell>
-
-
-                var sommaHappiness=0.0
-                var count=0
-
-                for(pos in posUserList){
-                    sommaHappiness+=pos.emotion
-                    count+=1
+                if (posUserList.isEmpty()){
+                    // no locations were recorded for this users, profile is empty
+                    inflateProfile(0.0, listOf())
+                    return
                 }
+                posUserList = posUserList.sortedByDescending { it.timestamp } as MutableList<LocationCell>
 
-                val happinessMean=sommaHappiness/count
+                val happinessMean = happinessAccumulator / posUserList.size
 
-                //now we want to obtain the 5 latest location
-                posUserList= posUserList.take(5) as MutableList<LocationCell>
+                // now we want to obtain the 5 latest location
 
-                val timestampLast= mutableListOf<Long>()
-                val dateLast= mutableListOf<String>()
-                for(i in 0 until 5){
+                // list that will contain the latest locations
+                val lastLocationsList= mutableListOf<LocationCell>()
+                lastLocationsList.add(posUserList[0])
 
-
-                    timestampLast.add(posUserList[i].timestamp)
-                    val date = Date(timestampLast[i]) // create a new Date object from the timestamp
-                    val format = getDateInstance(DateFormat.DEFAULT) // create a date format
-                    val dateString = format.format(date) // format the date as a string
-                    dateLast.add(dateString)
-                }
-
-                val posList = listOf(
-                    Location(posUserList[0].street, posUserList[0].city, dateLast[0]),
-                    Location(posUserList[1].street, posUserList[1].city, dateLast[1]),
-                    Location(posUserList[2].street, posUserList[2].city, dateLast[2]),
-                    Location(posUserList[3].street, posUserList[3].city, dateLast[3]),
-                    Location(posUserList[4].street, posUserList[4].city, dateLast[4])
-                )
-                /*
-                var posList= mutableListOf<LocationCell>()
-                posList.add(posUserList[0])
+                // actual number of elements in the list
                 var numElements = 1
                 var i = 1
-                while(i <= posUserList.size && numElements < 5){
-                    var nextLocation = posUserList.get(i)
-                    if (nextLocation.city.equals(posList.last().city) &&
-                        nextLocation.street.equals(posList.last().street)){
-                        i++
-                        continue
+
+                // we scan the list until the end, or until we've got 5 locations
+                while(i < posUserList.size && numElements < 5){
+                    val nextLocation = posUserList.get(i)
+                    if (nextLocation.city.equals(lastLocationsList.last().city) &&
+                        nextLocation.street.equals(lastLocationsList.last().street)){
+                        // location is the same as before, skip it
                     }
                     else{
-                        i++
-                        posList.add(nextLocation)
+                        // add location to the latest locations
+                        lastLocationsList.add(nextLocation)
                         numElements++
                     }
+                    i++
                 }
 
+                //list that will contain the relevant information about the latest locations
                 val listToReturn : ArrayList<Location> = ArrayList(numElements)
 
                 for (j in 0 until numElements){
+                    // inflate listToReturn
                     val date = Date(posUserList[j].timestamp) // create a new Date object from the timestamp
                     val format = getDateInstance(DateFormat.DEFAULT) // create a date format
                     val dateString = format.format(date) // format the date as a string
-                    listToReturn.add(Location(posList[j].street, posList[j].city, dateString))
+                    listToReturn.add(Location(lastLocationsList[j].street, lastLocationsList[j].city, dateString))
                 }
-                */
 
-                inflateProfile(happinessMean,posList)
+                // inflate profile with the retrieved information
+                inflateProfile(happinessMean,listToReturn)
 
             }
 
             override fun onCancelled(error: DatabaseError) {
-                println("database error in retrieve this info")
-
+                println("database error in retrieving this info")
             }
         })
     }
@@ -233,13 +211,14 @@ class AccountActivity : AppCompatActivity()
         val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
         val myRef: DatabaseReference = database.getReference("users")
 
+        // get date of birth
         myRef.get()
             .addOnSuccessListener { documents ->
                 documents.children.forEach { child ->
                     val childData = child.value as HashMap<String, String>
 
-                    val username_db = childData.get("username")
-                    if (username_db == username){
+                    val usernameDB = childData.get("username")
+                    if (usernameDB == username){
                         dateOfBirth = childData.get("date_of_birth")!!
                     }
                     val usernameText = getString(R.string.profile_username, username)
@@ -254,11 +233,12 @@ class AccountActivity : AppCompatActivity()
             }
 
 
-        //compute happinessIndex and lastLocations
-
+        // round happinessMean to get happiness Index for this user
         happinessIndex=(happinessMean * 100.0).roundToInt() / 100.0
+
         lastLocations=posList
 
+        // create list of locations
         val recyclerView = findViewById<RecyclerView>(R.id.location_list)
         val layoutManager = LinearLayoutManager(this)
         recyclerView.layoutManager = layoutManager
@@ -273,9 +253,10 @@ class AccountActivity : AppCompatActivity()
 
         var imageHappinessPath = 0
 
+        // set image
         when {
-            happinessIndex < 0.25 -> imageHappinessPath = R.drawable.happy_level1
-            happinessIndex >= 0.25 && happinessIndex < 0.5 -> imageHappinessPath = R.drawable.happy_level2
+            happinessIndex < 0.1 -> imageHappinessPath = R.drawable.happy_level1
+            happinessIndex >= 0.1 && happinessIndex < 0.5 -> imageHappinessPath = R.drawable.happy_level2
             happinessIndex >= 0.5 && happinessIndex < 0.75 -> imageHappinessPath = R.drawable.happy_level3
             happinessIndex >= 0.75 -> imageHappinessPath = R.drawable.happy_level4
         }
@@ -283,12 +264,14 @@ class AccountActivity : AppCompatActivity()
 
     }
 
+    // method to set change password button visible, called from ChangePasswordFragment
     fun resetButton() {
         if (changePasswordButton != null){
             changePasswordButton?.visibility = VISIBLE
         }
     }
 
+    // method to set change password button invisible, called from ChangePasswordFragment
     fun setButtonToInvisible(){
         if(changePasswordButton != null){
             changePasswordButton?.visibility = INVISIBLE
@@ -307,12 +290,13 @@ class AccountActivity : AppCompatActivity()
     private fun isLocationEnabled(): Boolean
     {
         val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        // Devono essere attivi sia il GPS che la connessione a Internet
+        // Both GPS and internet access must be enabled
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
             LocationManager.NETWORK_PROVIDER)
     }
 }
 
+// class to manage the list of latest locations
 class LocationListAdapter(private val locationList: List<Location>) :
     RecyclerView.Adapter<LocationListAdapter.LocationListViewHolder>() {
 
@@ -336,10 +320,7 @@ class LocationListAdapter(private val locationList: List<Location>) :
     }
 
     override fun getItemCount() = locationList.size
-
-
 }
-
 
 data class Location(
     val street: String?,
