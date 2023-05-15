@@ -44,8 +44,6 @@ class ClusterService(): Service()
     override fun onDestroy()
     {
         super.onDestroy()
-        // Before close, we need to delete all the old data
-        clusterRef.removeValue()
     }
 
     override fun onCreate()
@@ -168,6 +166,9 @@ class ClusterService(): Service()
     // This method start the connection to the DataBase for write the collection Clusters
     private fun writeClusterDB(listClusterLoc: MutableList<ClusterCentroid>)
     {
+        // Before, we need to delete all the old data
+        clusterRef.removeValue()
+
         // Now we can finally write
         for (cluster in listClusterLoc)
             clusterRef.push().setValue(cluster)

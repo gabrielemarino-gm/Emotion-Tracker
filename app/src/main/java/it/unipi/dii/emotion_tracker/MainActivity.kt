@@ -22,6 +22,8 @@ class MainActivity : AppCompatActivity()
     private var gpsMessageShown: Boolean = false
     private var isRotated: Boolean = false
 
+
+
     companion object
     {
         private const val gpsMessageShown_KEY = "gpsMessageShown"
@@ -29,6 +31,7 @@ class MainActivity : AppCompatActivity()
         private const val isRotated_KEY = "isRotated"
         private const val gpsIsOn_KEY = "GPS is ON"
         private const val gpsIsOFF_KEY = "GPS is OFF"
+        private var serviceAlreadyStart: Boolean = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?)
@@ -41,8 +44,14 @@ class MainActivity : AppCompatActivity()
         // val logoutButton =findViewById<Button>(R.id.btn_logout)
 
 // (    START CLUSTER SERVICE
-        println("DBG: Starting service")
-        startService(Intent(this@MainActivity, ClusterService::class.java))
+        println("DBG: serviceAlreadyStart = $serviceAlreadyStart")
+        // I Need this control because otherwise the application recall the service each time the user move in the Home page
+        if (!serviceAlreadyStart)
+        {
+            println("DBG: Starting service")
+            startService(Intent(this@MainActivity, ClusterService::class.java))
+            serviceAlreadyStart = true
+        }
 // )
 
         sharedPref = getSharedPreferences(appPreferences_KEY, Context.MODE_PRIVATE)
@@ -72,16 +81,6 @@ class MainActivity : AppCompatActivity()
             val loginPage = Intent(this, LoginActivity::class.java)
             startActivity(loginPage)
             finish()
-        }
-        else
-        {
-            // Need to retrieve the user name
-            // TODO(To be Implement)
-            // val prefs = this.getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
-            // val username = prefs.getString("username", "")!!
-            // val usernameTV = findViewById<TextView>(R.id.user_name)
-            // usernameTV.setText(username)
-            println("DBG: User Logged")
         }
 // )
 
@@ -140,39 +139,6 @@ class MainActivity : AppCompatActivity()
             true
         }
 // )
-        /*trialButton.setOnClickListener{
-            val trialPage = Intent(this, AccountActivity::class.java)
-            startActivity(trialPage)
-        }
-
-        mapButton.setOnClickListener {
-            // val mapPage = Intent(this, MapActivity::class.java)
-            // startActivity(mapPage)
-            if(isLocationEnabled())
-            {
-                val mapPage = Intent(this, MapActivity::class.java)
-                startActivity(mapPage)
-            }
-            else
-            {
-                // Ask to activate the GPS
-                Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
-                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                startActivity(intent)
-            }
-
-        }
-        logoutButton.setOnClickListener{
-            //remove token from sharedPreferences
-            val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
-            val editor = prefs.edit()
-            editor.remove("token")
-            editor.apply()
-
-            val loginPage = Intent(this, LoginActivity::class.java)
-            startActivity(loginPage)
-            finish()
-        }*/
     }
 
     override fun onDestroy()
@@ -211,17 +177,16 @@ class MainActivity : AppCompatActivity()
     private fun isLocationEnabled(): Boolean
     {
         val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        // Devono essere attivi sia il GPS che la connessione a Internet
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
-            LocationManager.NETWORK_PROVIDER)
+        // Both GPS and Internet connection must be active
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean
+    {
         if(toggle.onOptionsItemSelected(item))
         {
             return true
         }
-
         return super.onOptionsItemSelected(item)
     }
 }

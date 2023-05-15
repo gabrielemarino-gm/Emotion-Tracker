@@ -80,19 +80,12 @@ class MapActivity: AppCompatActivity()
         // Set the starting point on the map
         setStartPosition(map)
         // generateClusters(myRef,map)
-        //Retrieve username of the logged user
+
+        // Retrieve username of the logged user
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
         val username = prefs.getString("username", "")!!
         val clusterRef: DatabaseReference = database.getReference("clusters_${username}")
-        // val mapController = map.controller
-        // mapController.setZoom(7.5)
-        // val startPoint = GeoPoint(41.8902, 12.4922)
-        // mapController.setCenter(startPoint)
 
-        //map.onResume()
-        //map.viewTreeObserver.addOnGlobalLayoutListener {
-        //  keepPositionVisible(myRef,map)
-        //}
 
         // This is useful for make an action when the user scrlol or zoom the map
         map.setMapListener(object: MapListener
@@ -229,12 +222,6 @@ class MapActivity: AppCompatActivity()
 
         val latRef=myRef.orderByChild("latitude").startAt(coordinates[0]).endAt(coordinates[1])
 
-        //val longRef=latRef.orderByChild("longitude").startAt(coordinates[2]).endAt(coordinates[3])
-
-        //val  timeRef= longRef.orderByChild("timestamp").startAt(twoHoursAgoMillis.toDouble()).endAt(currentTimeMillis.toDouble())
-
-        //val timeRefs= mutableListOf<DatabaseReference>()
-
         latRef.addListenerForSingleValueEvent(object : ValueEventListener{
             override fun onDataChange(snapshot: DataSnapshot) {
                 val timeRefs= mutableListOf<HashMap<String,Any>>()
@@ -249,19 +236,7 @@ class MapActivity: AppCompatActivity()
                         longRefList.add(child)
                     }
                 }
-                //here we have the data filtered by latitude and also longitude
-                /*val timeRefList= mutableListOf<DataSnapshot>()
 
-                for(element in longRefList){
-                    val point=element.value as HashMap<String,Any>
-                    var timeOfPoint : Long = 0
-                    if(point.get("timestamp")!=null) {
-                        timeOfPoint = point.get("timestamp") as Long
-                    }
-                    if(timeOfPoint>twoHoursAgoMillis){
-                        timeRefList.add(element)
-                    }
-                }*/
                 //now we have also the filter on timestamp, and the results on the timeRefList
                 //println("listaquery-----------------------------------------")
                 for (element in longRefList){
@@ -279,9 +254,7 @@ class MapActivity: AppCompatActivity()
                     )
                     clusterList.add(cluster)
                     timeRefs.add(timeRef)
-                    //println(timeRef)
                 }
-                //generateClusters(timeRefs, map)
                 //println("size of list"+clusterList.size)
                 printMarkers(clusterList,map)
             }
@@ -294,141 +267,6 @@ class MapActivity: AppCompatActivity()
         //return timeRefs
     }
 
-    /*
-    private fun generateClusters(myRef: DatabaseReference, map: MapView)
-    {
-        // Need to retrieve only the point inside the screen of the user and in given time interval.
-        // Retrieve point and recompute clustering each time the user move the map.
-
-        //Retrieve username of the logged user
-        val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
-        val username = prefs.getString("username", "")!!
-
-        val database: FirebaseDatabase = FirebaseDatabase.getInstance("https://emotion-tracker-48387-default-rtdb.europe-west1.firebasedatabase.app/")
-        val clusterRef: DatabaseReference = database.getReference("clusters_${username}")
-
-        //clean the collection of the cluster for that specific user
-        clusterRef.removeValue()
-
-        myRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val data = mutableListOf<List<Double>>()
-                val labeledClass = mutableListOf<Double>()
-                snapshot.children.forEach { child ->
-
-                    val childData = child.value as HashMap<String, Any>
-                    //println("elem$childData")
-
-                    data.add(
-                        listOf(
-                            childData.get("latitude") as Double,
-                            childData.get("longitude") as Double
-                        )
-                    )
-                    labeledClass.add(((childData.get("emotion") as Double)))
-
-                }
-                // )
-
-
-                // Convert the list in array, because the class DBSCAN accept only this type
-                val dataArray = Array(data.size) { i -> data[i].toDoubleArray() }
-                val scoreArray = Array(labeledClass.size) { i -> labeledClass[i] }
-
-
-                // Create the DBSCAN model
-                val dbscan = DBSCAN.fit(dataArray, 7, 0.001)
-
-                // Execution of the cluster
-                val labels = dbscan.y
-
-                // (    Discover the points of each cluster.
-                val clusterPoints = mutableMapOf<Int, MutableList<List<Double>>>()
-                val scorePointCluster = mutableMapOf<Int, MutableList<List<Double>>>()
-
-                for (i in dataArray.indices) {
-                    val label = labels[i]
-                    val point = dataArray[i].toList()
-                    val score = scoreArray[i]
-
-                    scorePointCluster.getOrPut(label, { mutableListOf() }).add(listOf(score))
-                    clusterPoints.getOrPut(label, { mutableListOf() }).add(point)
-                }
-                // )
-
-                val clusterList = mutableListOf<ClusterCentroid>()
-
-                // Find the centroid: the means of all the points inside a single cluster
-                for (i in clusterPoints.keys) {
-                    // println("DBG: Cluster $i: $clusterPoints[i]")
-                    var lat: Double = 0.0
-                    var lon: Double = 0.0
-                    var sco: Double = 0.0
-                    var numberOfPointsInCluster : Long = 0
-
-                    for (point in clusterPoints[i]!!) {
-                        lat = lat + point[0]
-                        lon = lon + point[1]
-                        numberOfPointsInCluster++  //count the number of points in the cluster
-                    }
-
-                    var scoreIndx: Int = 0
-                    while (scoreIndx < scorePointCluster[i]!!.size) {
-                        // println("DBG : scorePointCluster[i]!![scoreIndx] = ${scorePointCluster[i]!![scoreIndx]}")
-                        sco = sco + scorePointCluster[i]!![scoreIndx][0]
-                        scoreIndx++
-                    }
-
-                    //for (score in scorePointCluster[i]!!)
-                    //{
-                    //    sco = sco + score
-                    //    println("DBG: $score")
-                    //}
-
-                    lat = lat / clusterPoints[i]?.size!!
-                    lon = lon / clusterPoints[i]?.size!!
-                    sco = sco / scorePointCluster[i]?.size!!
-
-                    val geocoder = Geocoder(applicationContext, Locale.getDefault())
-                    val addresses = geocoder.getFromLocation(lat, lon, 1)
-                    val address = addresses?.get(0)
-
-                    val street = address?.thoroughfare
-                    val city = address?.locality
-
-                    // val currentCluster =  ClusterInfo(sco, lat, lon)
-                    // clusters = clusters.plus(currentCluster)
-
-                    //println("DBG: Cluster $i: $lat, $lon, score = $sco")
-
-                    //TODO maybe we should put the mean of all the date of the points inside the cluster, or other things
-                    val timestamp = System.currentTimeMillis()
-
-                    val cluster = ClusterCentroid(
-                        lat,
-                        lon,
-                        street,
-                        city,
-                        sco,
-                        numberOfPointsInCluster,
-                        timestamp
-                    )
-                    clusterList.add(cluster)
-                    clusterRef.push().setValue(cluster)
-
-                }
-                //listCluster = clusterList
-                //print_markers(clusterList, map)
-                keepPositionVisible(clusterRef,map)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                println("error")
-            }
-
-        })
-    }
-    */
     private fun printMarkers(clusterList: MutableList<ClusterCentroid>, map: MapView)
     {
         try
@@ -463,25 +301,13 @@ class MapActivity: AppCompatActivity()
                         emotion_level >= 0.5 && emotion_level < 0.75 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level3)
                         emotion_level >= 0.75 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level4)
                     }
-                    /*if (emotion_level > 0.50) {
-                        //println("maggiore di 0.50")
-                        val icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
-                        marker.icon = BitmapDrawable(resources, icon)
 
-                    } else {
-                        //println("minore di 0.50")
-                        val icon = BitmapFactory.decodeResource(resources, R.drawable.sad_red_face)
-                        marker.icon = BitmapDrawable(resources, icon)
-                    }*/
                     marker.icon = BitmapDrawable(resources, icon)
                     map.overlays.add(marker)
                     //println("printed markers")
                     map.invalidate()
                     listPrintedCluster.add(cluster) //added cluster to the list of the cluster already printed on the map
                 }
-                //else{
-                  //  println("cluster already printed")
-                //}
             }
         }
         catch (e: java.lang.Exception)
@@ -502,24 +328,10 @@ class MapActivity: AppCompatActivity()
 
     private fun setStartPosition(map: MapView)
     {
-        // Controllare se l'utente ha dato il permesso per avere la localizzazione
+        // Check if the user has given permission to have the location
         if(checkPermission())
         {
             // Check if the GPS is active
-            //if (!isLocationEnabled())
-            //{
-            //    // Ask to activate the GPS
-            //    Toast.makeText(this, "Turn GPS on", Toast.LENGTH_SHORT).show()
-            //    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-            //    startActivity(intent)
-            //}
-
-            // TODO Need to be implemented
-            // if (!isLocationEnabled())
-            // {
-            //     // If the user didn't activate the GPS, go in the home page or find a way to don't close the app
-            // }
-
             if (isLocationEnabled())
             {
                 // Controllo permessi
@@ -534,14 +346,13 @@ class MapActivity: AppCompatActivity()
                 // We finally have access to latitude and longitude
                 fusedLocationClient.lastLocation.addOnCompleteListener(this)
                 {
-                        task ->
+                    task ->
                     val location: Location? = task.result
 
                     if (location == null) {
                         Toast.makeText(this, "Null Position", Toast.LENGTH_SHORT).show()
                         val mapController = map.controller
                         mapController.setZoom(7.5)
-                        //println("DBG: " + location.latitude.toString() + "\t\t\t" + location.latitude.toString())
 
                         // if the location is null, the starting point of the map is the Colosseo
                         val startPoint = GeoPoint(41.89025,12.49228)
@@ -552,7 +363,7 @@ class MapActivity: AppCompatActivity()
 
                         val mapController = map.controller
                         mapController.setZoom(15.5)
-                        //println("DBG: " + location.latitude.toString() + "\t\t\t" + location.latitude.toString())
+                        // println("DBG: " + location.latitude.toString() + "\t\t\t" + location.latitude.toString())
                         val startPoint = GeoPoint(location.latitude, location.longitude)
                         mapController.setCenter(startPoint)
                     }
@@ -578,8 +389,7 @@ class MapActivity: AppCompatActivity()
     {
         val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         // Devono essere attivi sia il GPS che la connessione a Internet
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
-            LocationManager.NETWORK_PROVIDER)
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
 
@@ -589,7 +399,6 @@ class MapActivity: AppCompatActivity()
                 &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
     }
-
 
     private fun requestPermissions()
     {
@@ -623,8 +432,7 @@ class MapActivity: AppCompatActivity()
         }
     }
 
-
-
+    
     private fun getActualScreenCoordinatesInterval(): DoubleArray
     {
         val map = findViewById<org.osmdroid.views.MapView>(R.id.map)

@@ -67,7 +67,7 @@ class AccountActivity : AppCompatActivity()
             changePasswordButton?.visibility = INVISIBLE
         }
 
-        // Menu Manager
+// (    MENU
         val drawerLayout: DrawerLayout = findViewById(R.id.drawerLayout)
         val navView: NavigationView = findViewById(R.id.nav_view)
 
@@ -83,7 +83,7 @@ class AccountActivity : AppCompatActivity()
             {
                 // On Click over the menu's Home Button
                 R.id.nav_home -> {
-                    val trialPage = Intent(this, MapActivity::class.java)
+                    val trialPage = Intent(this, MainActivity::class.java)
                     startActivity(trialPage)
                 }
 
@@ -121,7 +121,7 @@ class AccountActivity : AppCompatActivity()
             }
             true
         }
-
+// )
     }
 
     private fun retrieveDataFromDB() {
