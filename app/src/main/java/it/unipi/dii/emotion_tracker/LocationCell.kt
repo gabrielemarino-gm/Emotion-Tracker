@@ -10,6 +10,7 @@ class LocationCell(
     var username: String
 )
 {
+    /*
     fun setLatitudeCell(l: Double) {latitude = l}
     fun setLongitudeCell(l: Double) {longitude = l}
     fun setStreetCell(s: String) {street = s}
@@ -24,5 +25,5 @@ class LocationCell(
     fun getCityCell():String? {return city}
     fun getEmotionCell():Double {return emotion}
     fun setTimeStampCell(): Long {return timestamp}
-    fun setUserNameCell(): String{return username}
+    fun setUserNameCell(): String{return username}*/
 }
