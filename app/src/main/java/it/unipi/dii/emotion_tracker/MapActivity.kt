@@ -239,29 +239,6 @@ class MapActivity: AppCompatActivity()
 
                 //now we have also the filter on timestamp, and the results on the timeRefList
                 //println("listaquery-----------------------------------------")
-
-                for (element in longRefList) {
-                    val timeRef = element.value as HashMap<String, Any>
-
-                    println("DBG: element = $timeRef")
-
-                    val street = timeRef.get("street") as? String ?: "Unknown street"
-                    val city = timeRef.get("city") as? String ?: "Unknown city"
-
-                    val cluster = ClusterCentroid(
-                        timeRef.get("latitude") as Double,
-                        timeRef.get("longitude") as Double,
-                        street,
-                        city,
-                        timeRef.get("emotion") as Double,
-                        timeRef.get("numberOfPoints") as Long,
-                        timeRef.get("timestampDate") as Long
-                    )
-                    clusterList.add(cluster)
-                    timeRefs.add(timeRef)
-                }
-
-                /*
                 for (element in longRefList){
                     val timeRef=element.value as HashMap<String,Any>
 
@@ -278,11 +255,6 @@ class MapActivity: AppCompatActivity()
                     clusterList.add(cluster)
                     timeRefs.add(timeRef)
                 }
-                */
-
-
-
-
                 //println("size of list"+clusterList.size)
                 printMarkers(clusterList,map)
             }
