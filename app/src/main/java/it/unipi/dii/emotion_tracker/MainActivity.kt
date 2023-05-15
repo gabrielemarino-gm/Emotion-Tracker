@@ -7,6 +7,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.view.MenuItem
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -21,7 +22,8 @@ class MainActivity : AppCompatActivity()
     private var gpsMessageShown: Boolean = false
     private var isRotated: Boolean = false
 
-    companion object{
+    companion object
+    {
         private const val gpsMessageShown_KEY = "gpsMessageShown"
         private const val  appPreferences_KEY = "appPreferences"
         private const val isRotated_KEY = "isRotated"
@@ -48,7 +50,8 @@ class MainActivity : AppCompatActivity()
         gpsMessageShown = sharedPref.getBoolean(gpsMessageShown_KEY, false)
         isRotated = savedInstanceState?.getBoolean(isRotated_KEY, false) ?: false
 
-        if (!gpsMessageShown && !isRotated) {
+        if (!gpsMessageShown && !isRotated)
+        {
             // Check GPS status
             checkGpsStatus()
 
@@ -74,7 +77,11 @@ class MainActivity : AppCompatActivity()
         {
             // Need to retrieve the user name
             // TODO(To be Implement)
-            println("user logged")
+            // val prefs = this.getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
+            // val username = prefs.getString("username", "")!!
+            // val usernameTV = findViewById<TextView>(R.id.user_name)
+            // usernameTV.setText(username)
+            println("DBG: User Logged")
         }
 // )
 
@@ -193,31 +200,13 @@ class MainActivity : AppCompatActivity()
             Toast.makeText(this, gpsIsOFF_KEY, Toast.LENGTH_SHORT).show()
         }
     }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-
         // Save flag to indicate if the phone has been rotated
         outState.putBoolean(isRotated_KEY, true)
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //
 
     private fun isLocationEnabled(): Boolean
     {

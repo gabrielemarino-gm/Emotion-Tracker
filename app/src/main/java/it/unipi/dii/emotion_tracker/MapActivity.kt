@@ -46,7 +46,6 @@ private lateinit var listCluster: MutableList<ClusterCentroid>
 private lateinit var listPrintedCluster: MutableList<ClusterCentroid>
 class MapActivity: AppCompatActivity()
 {
-
     private val MY_PERMISSIONS_REQUEST_LOCATION = 123
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var buttonClicked : Boolean = false
