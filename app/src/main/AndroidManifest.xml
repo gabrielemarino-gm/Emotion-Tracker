@@ -34,11 +34,6 @@
             android:name=".RegisterActivity"
             android:exported="false"
             />
-        <activity
-            android:name=".TrialClusterActivity"
-            android:configChanges="orientation|screenSize"
-            android:exported="false"
-            />
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version"

@@ -87,7 +87,7 @@ class ClusterService(): Service()
                 val scoreArray = Array(labeledClass.size) { i -> labeledClass[i] }
 
                 // Create the DBSCAN model
-                val dbscan = DBSCAN.fit(dataArray, 7, 0.00075)
+                val dbscan = DBSCAN.fit(dataArray, 5, 0.0015)
                 println("DBG: after DBSCAN")
                 // Execution of the cluster
                 val labels = dbscan.y
