@@ -131,6 +131,8 @@ class MainActivity : AppCompatActivity()
                     editor.remove("token")
                     editor.apply()
 
+                    serviceAlreadyStart=false
+
                     val loginPage = Intent(this, LoginActivity::class.java)
                     startActivity(loginPage)
                     finish()
