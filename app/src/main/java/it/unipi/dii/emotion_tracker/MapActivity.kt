@@ -145,6 +145,8 @@ class MapActivity: AppCompatActivity()
                     editor.remove("token")
                     editor.apply()
 
+                    MainActivity.serviceClusterHandle()
+
                     val loginPage = Intent(this, LoginActivity::class.java)
                     startActivity(loginPage)
                     finish()

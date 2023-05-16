@@ -26,6 +26,10 @@ class MainActivity : AppCompatActivity()
 
     companion object
     {
+        fun serviceClusterHandle() {
+            serviceAlreadyStart=false
+        }
+
         private const val gpsMessageShown_KEY = "gpsMessageShown"
         private const val  appPreferences_KEY = "appPreferences"
         private const val isRotated_KEY = "isRotated"
