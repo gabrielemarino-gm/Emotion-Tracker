@@ -37,7 +37,7 @@ import java.util.concurrent.Executors
 import kotlin.math.roundToInt
 
 
-class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
+class CameraFragment : Fragment() {
     //Binding to layout objects
     private var binding: FragmentCameraBinding? = null
     //Non null reference to binding
@@ -46,11 +46,11 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
     //Thread that handles camera activity
     private lateinit var cameraExecutor: ExecutorService
-    //Reference to EmotionRecognizer class
+    //Reference to EmotionRecognizer class to detect emotion in detected faces
     private lateinit var emotionRecognizer: EmotionRecognizer
     //Buffer to store the Bitmap of the last frame from the camera
     private lateinit var bitmapBuffer: Bitmap
-    //Reference to MlKit FaceDetection
+    //Reference to MlKit FaceDetection to detect faces
     private val faceDetector = FaceDetection.getClient()
 
     //Path to database
@@ -72,6 +72,13 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
     //Callback to be used when a new location arrives
     private lateinit var locCallback: LocationCallback
     private var firstCall = true
+
+    companion object {
+        private const val TAG = "CameraFragment"
+        private const val MY_PERMISSIONS_REQUEST_LOCATION = 123
+        // Size of the sliding window
+        private const val windowSize = 30
+    }
 
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
@@ -142,10 +149,11 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
+            // Manage rotation of the screen
             val windowManager = requireActivity().windowManager
             val rotation = windowManager.defaultDisplay.rotation
 
-            // Preview
+            // Preview to show on screen
             val preview = Preview.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setTargetRotation(rotation)
@@ -154,10 +162,11 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                     it.setSurfaceProvider(fragmentCameraBinding.viewFinder.surfaceProvider)
                 }
 
+            // Workflow to apply for each frame detected
             val imageAnalyzer = ImageAnalysis.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setTargetRotation(rotation)
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST) // Discard frames until the processing of the previous one is not completed
                 .setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()
                 .also {
@@ -177,6 +186,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
                         val imageRotation = image.imageInfo.rotationDegrees
 
+                        // bitmap buffer contains the captured image
                         detectFaces(bitmapBuffer, imageRotation)
                     }
                 }
@@ -206,13 +216,14 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             &&
             ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
-            //TODO maybe we can remove this
+            // Needed for fusedLocationClient to work
             ActivityCompat.requestPermissions(requireActivity(),
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 MY_PERMISSIONS_REQUEST_LOCATION)
             return
         }
 
+        // Useful for discarding the first sample, which will contain a low number of frames
         firstCall = true
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
@@ -222,9 +233,10 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
             .build()
 
-        //Define callback
+        //Define callback to be called every 10 seconds
         locCallback = object : LocationCallback(){
             override fun onLocationResult(loc_result: LocationResult) {
+                // The callback gets the average happiness index from the past 10 seconds and the current location of the user and sends it to the database
                 Log.d(TAG, "onLocationResult fired")
                 if(loc_result.locations.isEmpty()){
                     return
@@ -235,9 +247,13 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                 val latitude = location.latitude
                 val longitude = location.longitude
                 Log.d(TAG, "Latitude: $latitude, Longitude: $longitude")
+
+                // Check if context is null
                 if (context == null){
                     return
                 }
+
+                // get information about current location
                 val geocoder = Geocoder(requireContext(), Locale.getDefault())
                 val addresses = geocoder.getFromLocation(latitude, longitude, 1)
                 val address = addresses?.get(0)
@@ -246,18 +262,19 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
                 val city = address?.locality
 
                 if(counter != 0 && !firstCall){
-                    //Compute aggregated happiness Index and send it to the database
+                    // Compute aggregated happiness Index and send it to the database
                     val happinessIndex = happinessAccumulator / counter
 
+                    // Reset accumulators
                     happinessAccumulator = 0.0
                     counter = 0
+
+                    // Happiness index that will be sent to the database
                     Log.d("TAG", "HappinessIndex: $happinessIndex")
                     val timestamp = System.currentTimeMillis()
-                    //TODO add username
+
                     val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex, timestamp, username)
                     myRef.push().setValue(locationCell)
-                    //val locationCell = LocationCell(latitude, longitude, street, city, happinessIndex, timestamp)
-                    //myRef.push().setValue(locationCell)
                 }
                 else if(firstCall){
                     firstCall = false
@@ -265,6 +282,8 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             }
         }
 
+
+        // Activate the location request
         fusedLocationClient.requestLocationUpdates(
             locRequest,
             locCallback,
@@ -283,19 +302,21 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
     private fun detectFaces(bitmapBuffer: Bitmap, imageRotation: Int) {
 
+        // Detect faces in the current frame (bitmapBuffer)
         val inputImage = InputImage.fromBitmap(bitmapBuffer, imageRotation)
 
         val result = faceDetector.process(inputImage)
             .addOnSuccessListener { faces ->
-                // Task completed successfully
+                // Task completed successfully, faces contain the list of bounding boxes enclosing faces
 
                 for (face in faces){
-                    //Get the bounding box of the image
+                    // Get the bounding box of the image
                     val boundingBox = face.boundingBox
 
+                    // Rotate bitmap according to imageRotation
                     val rotatedBitmap = rotateBitmap(bitmapBuffer, imageRotation.toFloat())
 
-                    //Process bounding box information
+                    // Process bounding box information
                     var startingPointLeft = boundingBox.left
                     var width = boundingBox.width()
                     if (boundingBox.left < 0){
@@ -320,7 +341,7 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
 
 
                     //Feed the deep learning model with the cropped image
-                    emotionRecognizer.detect(faceCropImage, 0)
+                    emotionRecognizer.detect(faceCropImage)
                 }
             }
             .addOnFailureListener { e ->
@@ -328,19 +349,14 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
             }
     }
 
-    fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
+    private fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
+        // Rotate the source bitmap of angle degrees
         val matrix = Matrix()
         matrix.postRotate(angle)
         return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
     }
 
-    companion object {
-        private const val TAG = "Emotion-tracker"
-        private const val MY_PERMISSIONS_REQUEST_LOCATION = 123
-        private const val windowSize = 50
-    }
-
-    override fun onResults(happinessValue: Float, inferenceTime: Long, imageHeight: Int, imageWidth: Int){
+    fun onResults(happinessValue: Float){
         // Called when the EmotionRecognizer produces results
 
         //Update accumulators for sending them to the database later
@@ -348,23 +364,26 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         counter++
 
         if(windowArray.size >= windowSize){
-            Log.d("TAG", "Windows size: ${windowArray.size}")
+            // remove the oldest element from the window
             windowArray.removeFirst()
         }
 
         windowArray.add(happinessValue)
+
+        // Average happiness Index in the window
         val happinessIndex = windowArray.sum() / windowArray.size
 
         var imageHappinessPath = 0
 
         when {
-            happinessIndex < 0.25 -> imageHappinessPath = R.drawable.happy_level1
-            happinessIndex >= 0.25 && happinessIndex < 0.5 -> imageHappinessPath = R.drawable.happy_level2
+            happinessIndex < 0.1 -> imageHappinessPath = R.drawable.happy_level1
+            happinessIndex >= 0.1 && happinessIndex < 0.5 -> imageHappinessPath = R.drawable.happy_level2
             happinessIndex >= 0.5 && happinessIndex < 0.75 -> imageHappinessPath = R.drawable.happy_level3
             happinessIndex >= 0.75 -> imageHappinessPath = R.drawable.happy_level4
         }
 
         activity?.runOnUiThread {
+            // Show prediction on screen and related face image
             val tv1 = fragmentCameraBinding.faceView
             tv1.setImageResource(imageHappinessPath)
             val label = fragmentCameraBinding.label
@@ -373,10 +392,10 @@ class CameraFragment : Fragment(), EmotionRecognizer.ResultsListener {
         }
     }
 
-    override fun onError(error: String) {
+    fun onError(error: String) {
         activity?.runOnUiThread {
             Toast.makeText(requireContext(),
-                "Hello, onError arrived",
+                error,
                 Toast.LENGTH_SHORT).show()
         }
     }

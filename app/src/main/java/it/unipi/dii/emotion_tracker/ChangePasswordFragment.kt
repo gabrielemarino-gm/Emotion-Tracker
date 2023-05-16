@@ -53,40 +53,44 @@ class ChangePasswordFragment(
         binding = FragmentChangePasswordBinding.inflate(inflater)
 
         goBackButton = fragmentChangePasswordBinding.backButton
-        //rotation:
+
         // access the text values of old and new password fields then save them to the bundle
-        oldPasswordEditText = binding?.oldPassword!!
-        newPasswordEditText = binding?.newPassword!!
-        // retrieve the values if saved to the bundle
-        // Retrieving saved values (if any) from the bundle
+        oldPasswordEditText = fragmentChangePasswordBinding.oldPassword
+        newPasswordEditText = fragmentChangePasswordBinding.newPassword
+
+        // Retrieving saved values (if any) from the bundle (happens when rotating the screen)
         if (savedInstanceState != null) {
-            val oldPassword_saved = savedInstanceState.getString(OLD_PASSWORD_KEY)
-            oldPasswordEditText.setText(oldPassword_saved)
-            val newPassword_saved = savedInstanceState.getString(NEW_PASSWORD_KEY)
-            newPasswordEditText.setText(newPassword_saved)
+            val oldPasswordSaved = savedInstanceState.getString(OLD_PASSWORD_KEY)
+            oldPasswordEditText.setText(oldPasswordSaved)
+            val newPasswordSaved = savedInstanceState.getString(NEW_PASSWORD_KEY)
+            newPasswordEditText.setText(newPasswordSaved)
             username = savedInstanceState.getString("username")!!
         }
+
         goBackButton.setOnClickListener(){
             parentFragmentManager.beginTransaction().remove(this).commit()
-            // remove the fragment from back stack
+            // remove the fragment from back stack (pressing back button doesn't create it again)
             parentFragmentManager.popBackStack()
         }
+
         changePasswordButton = fragmentChangePasswordBinding.changePassword
         changePasswordButton.setOnClickListener {
              val oldPassword = fragmentChangePasswordBinding.oldPassword.text.toString()
              val newPassword = encryptPassword(fragmentChangePasswordBinding.newPassword.text.toString())
 
+            // check whether oldPassword is correct or not
             validatePassword(username, oldPassword) { childId ->
                 if (childId != null) {
+                    // oldPassword is the correct one, password is changed
                     usersRef.child(childId).child("password").setValue(newPassword)
                     activity?.runOnUiThread {
                         Toast.makeText(requireContext(), "Password successfully changed", Toast.LENGTH_SHORT).show()
                     }
                     parentFragmentManager.beginTransaction().remove(this).commit()
-                    // remove the fragment from back stack
+                    // remove the fragment from back stack (pressing back button doesn't create it again)
                     parentFragmentManager.popBackStack()
                 } else {
-                    // If old password is not the correct one
+                    // oldPassword is not the correct one
                     fragmentChangePasswordBinding.oldPassword.setText("")
                     fragmentChangePasswordBinding.newPassword.setText("")
                     activity?.runOnUiThread {
@@ -96,7 +100,9 @@ class ChangePasswordFragment(
                 }
             }
         }
-        parentActivity.setButtonToInvisible()
+
+        // Set changePasswordButton to invisible
+        parentActivity.setChangePasswordButtonToInvisible()
         return fragmentChangePasswordBinding.root
     }
     override fun onSaveInstanceState(outState: Bundle) {
@@ -104,7 +110,6 @@ class ChangePasswordFragment(
         outState.putString(OLD_PASSWORD_KEY, oldPasswordEditText.toString())
         outState.putString(NEW_PASSWORD_KEY, newPasswordEditText.toString())
         outState.putString("username", username)
-        //binding?.newPassword?.text.toString()
     }
 
     private fun encryptPassword(password: String): String {
@@ -143,14 +148,15 @@ class ChangePasswordFragment(
 
     }
 
-        override fun onDestroyView() {
+    override fun onDestroyView() {
         super.onDestroyView()
-        parentActivity.resetButton()
+        // set changePasswordButton to visible
+        parentActivity.setChangePasswordButtonToVisible()
     }
 
-    fun changeParentActivity(trialActivity: AccountActivity) {
-        parentActivity = trialActivity
+    fun changeParentActivity(accountActivity: AccountActivity) {
+        // change parent activity (rotation-related issue), in case container activity is recreated and fragment is not
+        parentActivity = accountActivity
     }
-
 
 }

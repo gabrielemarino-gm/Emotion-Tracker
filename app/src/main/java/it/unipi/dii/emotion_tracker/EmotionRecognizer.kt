@@ -2,7 +2,6 @@ package it.unipi.dii.emotion_tracker
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.os.SystemClock
 import android.util.Log
 import com.google.android.gms.tflite.client.TfLiteInitializationOptions
 import com.google.android.gms.tflite.gpu.support.TfLiteGpu
@@ -14,7 +13,6 @@ import org.tensorflow.lite.support.common.ops.CastOp
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
-import org.tensorflow.lite.support.image.ops.Rot90Op
 import org.tensorflow.lite.support.image.ops.TransformToGrayscaleOp
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 
@@ -22,7 +20,7 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 class EmotionRecognizer(
     val context: Context,
     var initialized: Boolean = false,
-    val resultsListener: ResultsListener) {
+    val resultsListener: CameraFragment) {
 
     private val TAG = "EmotionRecognizer"
 
@@ -45,21 +43,19 @@ class EmotionRecognizer(
         }
     }
 
-    fun detect(image: Bitmap, imageRotation: Int) {
+    fun detect(image: Bitmap) {
         if (!initialized) {
             Log.e(TAG, "detect: TfLiteVision is not initialized yet")
             return
         }
-        // Inference time is the difference between the system time at the start and finish of the
-        // process
-        var inferenceTime = SystemClock.uptimeMillis()
 
         //image preprocessing workflow
-        val imageProcessor = ImageProcessor.Builder().add(Rot90Op(-imageRotation / 90)) //rotate the image
-                                                     .add(ResizeOp(48,48, null)) //resize to 48x48
-                                                     .add(TransformToGrayscaleOp()) // transform to grayscale
-                                                     .add(CastOp(DataType.FLOAT32)) // cast to float value
-                                                     .build()
+        val imageProcessor = ImageProcessor.Builder()
+                            .add(ResizeOp(48,48, null)) //resize to 48x48
+                            .add(TransformToGrayscaleOp()) // transform to grayscale
+                            .add(CastOp(DataType.FLOAT32)) // cast to float value
+                            .build()
+
 
         // Preprocess the image and convert it into a TensorImage for detection.
         val tensorImage = imageProcessor.process(TensorImage.fromBitmap(image))
@@ -72,23 +68,8 @@ class EmotionRecognizer(
         val results = TensorBuffer.createFixedSize(intArrayOf(1, 1), DataType.FLOAT32)
         model.run(tensorImage.buffer, results.buffer)
         model.close()
-        inferenceTime = SystemClock.uptimeMillis() - inferenceTime
 
-        // send results to the listener
-        resultsListener.onResults(
-            results.getFloatValue(0),
-            inferenceTime,
-            tensorImage.height,
-            tensorImage.width)
-    }
-
-    interface ResultsListener {
-        fun onError(error: String)
-        fun onResults(
-            happinessValue: Float,
-            inferenceTime: Long,
-            imageHeight: Int,
-            imageWidth: Int
-        )
+        // send results to the listener, prediction of the neural network is just a float between 0 and 1
+        resultsListener.onResults(results.getFloatValue(0))
     }
 }

@@ -51,6 +51,7 @@ class AccountActivity : AppCompatActivity()
 
         changePasswordButton = findViewById(R.id.change_password_button)
         changePasswordButton?.setOnClickListener(){
+            // create the change password fragment
             val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
             val changePasswordFragment = ChangePasswordFragment(this, username)
             transaction.add(R.id.change_password_container, changePasswordFragment, "change_password")
@@ -265,14 +266,14 @@ class AccountActivity : AppCompatActivity()
     }
 
     // method to set change password button visible, called from ChangePasswordFragment
-    fun resetButton() {
+    fun setChangePasswordButtonToVisible() {
         if (changePasswordButton != null){
             changePasswordButton?.visibility = VISIBLE
         }
     }
 
     // method to set change password button invisible, called from ChangePasswordFragment
-    fun setButtonToInvisible(){
+    fun setChangePasswordButtonToInvisible(){
         if(changePasswordButton != null){
             changePasswordButton?.visibility = INVISIBLE
         }
