@@ -65,6 +65,7 @@ class ClusterService(): Service()
             {
                 val data = mutableListOf<List<Double>>()
                 val labeledClass = mutableListOf<Double>()
+                val timestampList= mutableListOf<Long>()
 
                 snapshot.children.forEach { child ->
                     val childData = child.value as HashMap<String, Any>
@@ -78,6 +79,7 @@ class ClusterService(): Service()
                         )
                     )
                     labeledClass.add(((childData.get("emotion") as Double)))
+                    timestampList.add(childData.get("timestamp") as Long)
 // )
                 }
 
@@ -85,6 +87,7 @@ class ClusterService(): Service()
                 // Convert the list in array, because the class DBSCAN accept only this type
                 val dataArray = Array(data.size) { i -> data[i].toDoubleArray() }
                 val scoreArray = Array(labeledClass.size) { i -> labeledClass[i] }
+                val timestampArray = Array(timestampList.size){i -> timestampList[i]}
 
                 // Create the DBSCAN model
                 val dbscan = DBSCAN.fit(dataArray, 5, 0.0015)
@@ -95,14 +98,17 @@ class ClusterService(): Service()
                 // (    Discover the points of each cluster.
                 val clusterPoints = mutableMapOf<Int, MutableList<List<Double>>>()
                 val scorePointCluster = mutableMapOf<Int, MutableList<List<Double>>>()
+                val timestampPointCluster = mutableMapOf<Int, MutableList<List<Long>>>()
 
                 for (i in dataArray.indices) {
                     val label = labels[i]
                     val point = dataArray[i].toList()
                     val score = scoreArray[i]
+                    val times =timestampArray[i]
 
                     scorePointCluster.getOrPut(label, { mutableListOf() }).add(listOf(score))
                     clusterPoints.getOrPut(label, { mutableListOf() }).add(point)
+                    timestampPointCluster.getOrPut(label, { mutableListOf() }).add(listOf(times))
                 }
                 // )
 
@@ -143,7 +149,14 @@ class ClusterService(): Service()
                         city="Unknown city"
                     }
 
-                    val timestamp = System.currentTimeMillis()
+                    var timestamp : Long = 0
+
+                    for(time in timestampPointCluster[i]!!){
+                        println("DBG: time = $time")
+                        if(time[0]>timestamp){
+                                timestamp=time[0]
+                        }
+                    }
 
                     val cluster = ClusterCentroid(
                         lat,
