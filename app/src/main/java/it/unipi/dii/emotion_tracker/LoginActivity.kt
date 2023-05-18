@@ -36,7 +36,6 @@ class LoginActivity : AppCompatActivity() {
 
         var login = 0
 
-        // TODO saved state of the UI elements., task completed
         // Restore the state of the UI elements if savedInstanceState is not null
         if (savedInstanceState != null) {
             val username = savedInstanceState.getString(LOGGED_USERNAME_KEY)
@@ -95,40 +94,7 @@ class LoginActivity : AppCompatActivity() {
     private fun getPhoneOrientation(): Int {
         return resources.configuration.orientation
     }
-    /*private fun retrieve_userID(username: String, database: FirebaseDatabase, callback: (String) -> Unit) {
 
-        val myRef: DatabaseReference = database.getReference("users")
-
-        var user_id =""
-
-        myRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-
-                snapshot.children.forEach { child ->
-                    val childKey = child.key
-                    println("keys${childKey}")
-                    val childData = child.value as HashMap<String,String>
-
-                    val username_db=childData.get("username")
-
-
-                    if(username==username_db ){
-                        if (childKey != null) {
-                            println("keys_match${childKey}")
-                            user_id=childKey
-                            callback(childKey)
-                        }
-                    }
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Handle error case
-                println("error in retrieving users")
-                callback(null.toString())
-            }
-        })
-    }*/
 
     private fun checkActiveSession() {
 
@@ -136,7 +102,7 @@ class LoginActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("myemotiontrackerapp", Context.MODE_PRIVATE)
         val token =
             prefs.getString("token", null) // retrieve the token with the user ID as a prefix
-        //val expirationTime = prefs.getLong("expirationTime", 0)
+
 
         if (token != null) {
             //the user was previously logged
@@ -162,7 +128,6 @@ class LoginActivity : AppCompatActivity() {
         with(sharedPreferences.edit()) {
             putString("token", token)
             putString("username", username)
-            //putString("token_${user_id}",tokenExpirationMillis.toString())
             apply()
         }
     }

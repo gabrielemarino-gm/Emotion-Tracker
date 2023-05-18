@@ -298,8 +298,8 @@ class MapActivity: AppCompatActivity()
                     //println(emotion_level.toDouble())
                     var icon = BitmapFactory.decodeResource(resources, R.drawable.smile_green_face)
                     when {
-                        emotion_level < 0.25 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level1)
-                        emotion_level >= 0.25 && emotion_level < 0.5 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level2)
+                        emotion_level < 0.1 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level1)
+                        emotion_level >= 0.1 && emotion_level < 0.5 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level2)
                         emotion_level >= 0.5 && emotion_level < 0.75 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level3)
                         emotion_level >= 0.75 -> icon = BitmapFactory.decodeResource(resources, R.drawable.happy_level4)
                     }
