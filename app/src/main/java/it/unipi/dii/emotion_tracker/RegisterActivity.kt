@@ -56,7 +56,7 @@ class RegisterActivity : AppCompatActivity() {
         var day = datePicker.dayOfMonth
 
         datePicker.init(year, month, day) { view, yearOfDOB, monthOfDOB, dayOfDOB ->
-            // TODO insert the DOB to Firebase database ...
+
             year  = yearOfDOB
             month = monthOfDOB + 1
             day   = dayOfDOB
