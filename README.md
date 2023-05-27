@@ -21,7 +21,7 @@ Just hit this [link](https://github.com/gabrielemarino-gm/Emotion-Tracker/blob/m
 ## Part VI: What the end user is kindly requested
 To use the app in its fullest capabilities the user is asked for these basic requirements.
 1) Creating credentials and 'memorize' and/or 'save' them
-2) Giving access to their the Internet connection
+2) Giving access to their Internet connection
 3) Access to the front Camera
 4) Switching on the GPS
 
