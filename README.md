@@ -1,7 +1,7 @@
 # Emotion-Tracker
 Project for the course of Mobile and Social Sensing System at the University of Pisa,A.Y 2022/23.
-# Project Specification
-Just hit this [Link](https://docs.google.com/document/d/1tTthzjZ7FmNGuivl1tXHL4T4d6C1JnitIRjI0Ezm4dI/edit#) for the project specification.
+# Project Documentations
+Just hit this [Link](https://github.com/gabrielemarino-gm/Emotion-Tracker/blob/main/Documentation/MASSS-project-description-GROUP4.pdf) for the project documentation/description. Just incase you need the presentation slides, [here](https://github.com/gabrielemarino-gm/Emotion-Tracker/blob/main/Documentation/Presentation-Mobile-Project-Group4.pdf)they are!
 
 ## Part-I: Emotion detection in Deep Learning with the FER2013 dataset
 -We get the dataset, FER2013, with all the 6 major emotions and the 'neutral' one included from [Kaggle](https://www.kaggle.com/datasets/msambare/fer2013). Then this dataset is preprocessed into an input 'dataset' that has two major classes named 'happy' and 'unhappy'. All the remaining  emotion classes are dropped to get a balanced dataset. Then our Binary-CNN model takes this dataset as an input to calculate the happiness level of the user in a real-time basis.
