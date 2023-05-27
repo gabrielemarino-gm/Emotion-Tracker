@@ -1,5 +1,5 @@
 # Emotion-Tracker
-Project for the course of Mobile and Social Sensing System at the University of Pisa,A.Y 2022/23.
+Project for the course of **Mobile and Social Sensing System** at the **University of Pisa**, A.Y 2022/23.
 # Project Documentations
 Just hit this [Link](https://github.com/gabrielemarino-gm/Emotion-Tracker/blob/main/Documentation/MASSS-project-description-GROUP4.pdf) for the project documentation/description. Just incase you need the presentation slides, [here](https://github.com/gabrielemarino-gm/Emotion-Tracker/blob/main/Documentation/Presentation-Mobile-Project-Group4.pdf) they are!
 
