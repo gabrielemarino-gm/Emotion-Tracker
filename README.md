@@ -16,7 +16,7 @@ Just hit this [link](https://github.com/gabrielemarino-gm/Emotion-Tracker/blob/m
 2) Users can change their credentials when they want.
 3) The user can see their happiest places on the map.
 4) Users can see the Rankings of their happiest places too.
-5) The app can keep the user input contents despite the orientation of the phone and also is possible to use it in different brightness levels.
+5) We tried our best to prioritize the **Accessibility** concept in our work.As a result, the app can keep the user input contents despite the orientation of the phone and also is possible to use it in different brightness levels and so much more.
 7) The summary of their latest locations along with the current status of the happiness-index is also provided and other credential details of the user are depicted.
 ## Part VI: What the end user is kindly requested for
 To use the app in its fullest capabilities the user is asked for these basic requirements.
